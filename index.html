@@ -28,28 +28,32 @@ NEW NAME- htmTxt --- prefix ALL with it.
 requites https (should auto-set) <br>
 PULLS COPY/PASTES FROM MAIN TEXT AREA, so just working will fill it.<br>
 COPY_PASTE BUFFER:<br>
-<select id="htmTxt_CopyPasteManager_div"  >
-       <option onclick="htmTxt_copy_paste_tool_setprev_copy_from_index(11);">No</option>
-       <option onclick="htmTxt_copy_paste_tool_setprev_copy_from_index(22);">Yes</option>
-</select>
-<br>
+
 <button id="htmTxt_PasteTextBox_div" value="" onclick="htmTxt_copy_paste_tool_update()">Add paste-buffer-text too buffer
 (or paste in box below)</button>
 
 <textarea id="htmTxt_PasteBox" placeholder="Paste here also adds to list..." style="width:100%; height:50px;"></textarea>
-
-<br><br>
-<button onclick="htmTxt_cmd_GO_TO_URL__ON_LINE_N_GOTO_NXT_LINE()"> GOTO_URL_ON_LINE_&_GOTO_NXT_LINE</button><select id="htmTxt_FileQuickSwitch_div" style="font-family:monospace; height:40px; border:2px solid #000;">
-    </select>
 <br>
+(select old copy data in right hand menu over textarea below)<br><br>
 <b id="htmTxt_last_line_break_disp_div">L:1 </b>
 ::
 <b id="htmTxt_CURRENT_FILENAME_div"></b>
 --- MAIN TEXT BOX:  <br>
+
+<select id="htmTxt_FileQuickSwitch_div" style="font-family:monospace; ">
+    </select>
+
+<select id="htmTxt_CopyPasteManager_div"  >
+       <option onclick="htmTxt_copy_paste_tool_setprev_copy_from_index(11);">No</option>
+       <option onclick="htmTxt_copy_paste_tool_setprev_copy_from_index(22);">Yes</option>
+</select>
+
+<br>
 <textarea autocapitalize="none" autocomplete="off" autocorrect="off"
 id="htmTxt_Main_textarea_div" placeholder="Paste here also adds to list..." style="font-family:monospace; width:100%; height:200px;"></textarea>
 <br>
 <b id="htmTxt_last_line_break_disp2_div">L:1 </b>
+<button onclick="htmTxt_cmd_GO_TO_URL__ON_LINE_N_GOTO_NXT_LINE()"> GOTO_URL_ON_LINE_&_GOTO_NXT_LINE</button>
 <br>
 JK/ DF(for menu) works! ('cntrl + SHIFT+ n' for autocomp, NEEDS SHIFT)
 <br>
