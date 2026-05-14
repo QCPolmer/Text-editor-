@@ -1,5 +1,6 @@
 // WARNING: this is considered alpha,
 // and no promises on updates
+// (mostly as a 'backup')
 
 
 OK, the idea is to get a bunch of vim 
@@ -18,3 +19,4 @@ is pressed on the //END// line.
 
 (jk-> enters normal mode, 
 df in normal mode for menu)
+https://qcpolmer.github.io/Text-editor-/
