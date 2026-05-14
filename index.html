@@ -12,7 +12,7 @@ if (window.location.protocol === 'http:' ) {
 <style>
     /* Force textarea to feel like a "Bunker" */
     textarea {
-        font-size: 16px !important; /* Critical to stop auto-zoom */
+        font-size: 20px !important; /* Critical to stop auto-zoom */
         line-height: 1.25;
         box-sizing: border-box; /* Ensures width:100% includes padding */
         -webkit-text-size-adjust: 100%;
@@ -444,8 +444,27 @@ function htmTxt_txtArea_undo_redo__UNDO( t){
 	if(t.htmTxt_redo == undefined){ t.htmTxt_redo= [];}
 	t.htmTxt_redo.push( {txt:t.value, loc:t.selectionStart});
 	var tmpS = t.htmTxt_undo.pop();
+	if(t.htmTxt_undo.length==0){ t.htmTxt_undo.push(tmpS);}
 	htmTxt_txtArea_replaceAll(t, tmpS.txt);
 	htmTxt_txtArea_jump_to_index(t, tmpS.loc);  }
+// gemini rewrite
+function htmTxt_txtArea_undo_redo__ADD(t) {
+    if (t.htmTxt_undo == undefined) { t.htmTxt_undo = []; }
+    if (t.htmTxt_redo == undefined) { t.htmTxt_redo = []; } // Reset Redo on new action
+    
+    while (t.htmTxt_undo.length > htmTxt_undo_MAXLEN) {
+        t.htmTxt_undo.shift();
+    }
+    
+    var lastState = t.htmTxt_undo[t.htmTxt_undo.length - 1];
+
+    // FIX: Compare t.value (string) to lastState.txt (string)
+    if (!lastState || t.value !== lastState.txt) {
+        t.htmTxt_undo.push({ txt: t.value, loc: t.selectionStart });
+        t.htmTxt_redo = []; // Clear redo when a new change is made
+    }
+}
+/*
 function htmTxt_txtArea_undo_redo__ADD( t){
 	if(t.htmTxt_undo == undefined){ t.htmTxt_undo = [];}
 	while(t.htmTxt_undo.length> htmTxt_undo_MAXLEN){
@@ -454,7 +473,7 @@ function htmTxt_txtArea_undo_redo__ADD( t){
 	if(  t.htmTxt_undo.length == 0 || 
 		t.value != t.htmTxt_undo[ t.htmTxt_undo.length -1].txt ){
 	    t.htmTxt_undo.push( {txt:t.value, loc:t.selectionStart}); } }
-
+*/
 
 ////////////////////////////
 // :b: Save/load from file :b: 
@@ -961,8 +980,8 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 	var t = e.target;
         if (!t) return 0;
 
-
-
+	t.focus();
+	
 	//////////////////////////////////////////////	
    	//DF- to turn to htmTxt_cmd_IN_NON_EDIT_MODE
    	////////////////
@@ -1194,7 +1213,9 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['oninput'] = async function(e) {
     var t = e.target;
 
     // --- 1. NON-EDIT MODE COMMAND CATCHER ---
-    if (htmTxt_cmd_IN_NON_EDIT_MODE) {
+    if (htmTxt_cmd_IN_NON_EDIT_MODE && 
+	(e.key.length > 1 && e.key != "Escape" && e.key != "Enter")) {
+	
         // Find the character the mobile keyboard just forced in
         var typedChar = t.value.slice(t.selectionStart - 1, t.selectionStart).toLowerCase();
         
@@ -1256,7 +1277,9 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'] = async function(e) {
    if(htmTxt__copy_paste_tool_data.length == 0){
 	htmTxt__copy_paste_tool_data.push("---PASTE BUFFER NOT SYNCED WITH SYSTEM PASTE BUFFER: TRY CTRL+V then CTRL+Z- TO SYNC!--"); }
    
-   if(htmTxt_cmd_IN_NON_EDIT_MODE){  htmTxt_cmd_NON_EDIT_MODE(e); return;}
+   if(htmTxt_cmd_IN_NON_EDIT_MODE ){
+
+	  htmTxt_cmd_NON_EDIT_MODE(e); return;}
 
    //updating autocomplete
    htmTxt_AUTOCOMP_update_core_n_get_autocomp( t );
@@ -1425,6 +1448,8 @@ htmTxt_cmd_LAST_TEXTAREA_SELECTED = htmTxt_Main_textarea_div;
 htmTxt_open_files__load_on_startup();
 htmTxt_open_files_autosave__update( true);
 htmTxt_Main_textarea_div.focus();
+htmTxt_txtArea_undo_redo__ADD(
+	htmTxt_Main_textarea_div );
 
 </script>
 
