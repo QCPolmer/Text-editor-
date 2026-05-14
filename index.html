@@ -951,17 +951,17 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 	//////////////////////////////////////////////	
    	//DF- to turn to htmTxt_cmd_IN_NON_EDIT_MODE
    	////////////////
-   	if(htmTxt_cmd_last_keycode_down == 'd'){//d
-	    if( e.key.toLowerCase() == 'f'){ htmTxt_cmd_last_keycode_down = ""; //f
+   	if(htmTxt_cmd_last_keycode_down == 68){//d
+	    if( e.keyCode == 70){ htmTxt_cmd_last_keycode_down = ""; //f
 		htmTxt_cmd_NON_EDIT_MENU(e);
 		return e.preventDefault(); }  }   
-   	if(htmTxt_cmd_last_keycode_down == 'f'){//f
-	   if( e.key.toLowerCase() == 'd'){  htmTxt_cmd_last_keycode_down = "";  //d
+   	if(htmTxt_cmd_last_keycode_down == 70){//f
+	   if( e.keyCode == 68){  htmTxt_cmd_last_keycode_down = "";  //d
 		htmTxt_cmd_NON_EDIT_MENU(e);
 		return e.preventDefault(); }  }
 
 
-	if(e.key.toLowerCase() == 'k'){ // 'k'
+	if(e.keyCode == 75){ // 'k'
 		if(htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row ==-1){
 		   htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row = 
 			t.selectionStart -
@@ -980,7 +980,7 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 			htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row + 
 			htmTxt_txtArea_grab_curLine_INDEX_START(t));}
 		return e.preventDefault();  }
-	if(e.key.toLowerCase() == 'j'){ // 'j'
+	if(e.keyCode == 74){ // 'j'
 		if(htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row ==-1){
 		   htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row = 
 			t.selectionStart -
@@ -997,37 +997,37 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 			htmTxt_txtArea_grab_curLine_INDEX_START(t));}
 		return e.preventDefault(); }
 	htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row = -1;
-	if(e.key.toLowerCase() == 'h'){ // 'h'
+	if(e.keyCode == 72){ // 'h'
 		htmTxt_txtArea_jump_to_index( t, t.selectionStart-1);
 		return e.preventDefault();  }
-	if(e.key.toLowerCase() == 'l'){ // 'l'
+	if(e.keyCode == 76){ // 'l'
 		htmTxt_txtArea_jump_to_index( t, t.selectionStart+1);
 		return e.preventDefault(); }
-	if(e.key == '$' || e.key == '4'){ // '$'
+	if(e.keyCode == 52){ // '$'
 		htmTxt_txtArea_jump_to_index( t, 
 			htmTxt_txtArea_grab_curLine_INDEX_END(t));
 		return e.preventDefault(); }
-	if(e.key == '^' || e.key == '6'){ // '^'
+	if(e.keyCode == 54){ // '^'
 		htmTxt_txtArea_jump_to_index( t, 
 			htmTxt_txtArea_grab_curLine_INDEX_START(t));
 		return e.preventDefault(); }
-	if(e.key.toLowerCase() == 'w'){ // 'w'
+	if(e.keyCode == 87){ // 'w'
 		htmTxt_txtArea_select_word(t);
 		htmTxt_txtArea_jump_to_index( t, t.selectionEnd+1);
 		htmTxt_txtArea_select_word(t);
 		return e.preventDefault(); }
-	if(e.key.toLowerCase() == 'b'){ // 'b'
+	if(e.keyCode == 66){ // 'b'
 		htmTxt_txtArea_jump_to_index( t, t.selectionStart-2);
 		htmTxt_txtArea_select_word(t);
 		return e.preventDefault(); }
 
-	if(e.key =="Control"){ // 'ctrl', exit mode!
+	if(e.keyCode==17){ // 'ctrl', exit mode!
 		htmTxt_cmd_IN_NON_EDIT_MODE = false; return;}
-	if(e.key.toLowerCase() == 'i'){ // 'i' key
+	if(e.keyCode == 73){ // 'i' key
 		htmTxt_cmd_IN_NON_EDIT_MODE = false; }
-	if(e.key.toLowerCase() == 'a'){ // 'a' key
+	if(e.keyCode == 65){ // 'a' key
 		t.selectionStart +=1; t.selectionEnd +=1; htmTxt_cmd_IN_NON_EDIT_MODE = false; }
-	if(e.key.toLowerCase() == 'p'){ // 'p'
+	if(e.keyCode == 80){ // 'p'
 		htmTxt_txtArea_add_lines_below(t, //t=textarea element
 		  false,//getJumpToEndOfNewText_bool, 
 		  htmTxt__copy_paste_tool_data[0]);
@@ -1036,19 +1036,19 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 		e.preventDefault();
 		return;  }
 	
-	if(e.key == '%'){ // '%'
+	if(e.keyCode == 53){ // '%'
 		htmTxt_txtArea_jump_to_matching_bracket(t); 
 		e.preventDefault();
 		return; }
 	
-	if(e.key == '3' || e.key == '#'){ // '3/#' -  for word jumping
+	if(e.keyCode == 51){ // '3/#' -  for word jumping
 		var tmpWord = htmTxt_txtArea_select_word(t);
 		htmTxt_cmd_NON_EDIT_MODE_caught_find = tmpWord; }
-	if(e.key == '/'){ // '/' -  for find
+	if(e.keyCode == 191){ // '/' -  for find
 		var tmpWord = prompt("What do you want to find?");
 		if(tmpWord !=null){ 
 			htmTxt_cmd_NON_EDIT_MODE_caught_find = tmpWord;} }
-	if(e.key.toLowerCase() == 'n' || e.key == "#" || e.key == '/'
+	if(e.keyCode == 78 || e.keyCode == 191 || e.keyCode == 51
 			){ // 'n/#//' -  for autocomp
 		var tmpWord = htmTxt_cmd_NON_EDIT_MODE_caught_find;
 		var tmpDirIndexOf = "lastIndexOf"; var tmpInitOffset = -1;
@@ -1066,14 +1066,14 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 		return e.preventDefault();
 	}
 	
-	if(e.key == ':'){ // :
+	if(e.keyCode == 59){ // :
 		htm_t = t;
 		_htm_t_last_prompt =  prompt("RUN JS COMMAND: \n htm_t is text area,\n so htm_t.value is text area text \n (start lines with ';' too run on page) htm_get_paste() and htm_copy(txt) for clipboard, \n (//START//...//END//, for start/end multiline in-line-js)", _htm_t_last_prompt);
 		var tmpP =htmTxt_power_eval( _htm_t_last_prompt ); 
 		prompt( tmpP, tmpP);
 	}
 
-	if(e.key.toLowerCase() == 'y' && htmTxt_cmd_last_keycode_down == 'y'){ 
+	if(e.keyCode == 89 && htmTxt_cmd_last_keycode_down == 89){ 
 						// 'y'+ shift
 		var tmpTxt = htmTxt_txtArea_get_selected_lines(
 			t, false); //tmpRemoveLinesOPTIONAL)
@@ -1085,7 +1085,7 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 	}
 	//gemini rewrote next 2 blocks
 	// Inside the 'y' (Yank) block:
-	if(e.key.toLowerCase() == 'y' && htmTxt_cmd_last_keycode_down == 'y'){ //'y'
+	if(e.keyCode == 89 && htmTxt_cmd_last_keycode_down == 89){ //'y'
 	    var tmpTxt = htmTxt_txtArea_get_selected_lines(t, false);
 	    await htmTxt__copyText_to_clipboard(tmpTxt);
 	    await htmTxt_copy_paste_tool_update(true, tmpTxt);
@@ -1093,7 +1093,7 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 	    return;
 	}
 	// Inside the 'd' (Delete) block:
-	if(e.key.toLowerCase() == 'd' && htmTxt_cmd_last_keycode_down == 'd'){ //'d'
+	if(e.keyCode == 68 && htmTxt_cmd_last_keycode_down == 68){ //'d'
 	    htmTxt_txtArea_undo_redo__ADD(t); 
 	    
 	    var tmpTxt = htmTxt_txtArea_get_selected_lines(t, true); 
@@ -1104,7 +1104,7 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 	    return;
 	}
 	
-	if(e.key.toLowerCase() == 'g'){ // 'g'
+	if(e.keyCode == 71){ // 'g'
 		if( e.shiftKey ){ 
 			htmTxt_txtArea_jump_to_index(t, t.value.length);
 			htmTxt_txtArea_jump_to_prevLine(t);
@@ -1131,7 +1131,7 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 		e.preventDefault(); } 
 	
 	htmTxt_cmd_last_txtArea_value = t.value;
-    	htmTxt_cmd_last_keycode_down = e.key;	
+    	htmTxt_cmd_last_keycode_down = e.keyCode;	
 	return;
 }
 
@@ -1178,7 +1178,7 @@ var htmTxt_cmd_doing_ctrl_o_tab_o_esc_opt = false;
 var htmTxt_cmd_last_undo_i = -1;
 // paste below commented area to console to get keys pressed. 
 //document.body.onkeydown= function(e){ console.log(e.keyCode + " " + e.key);  } 
-htmTxt_settup_main_textareas_cmdKey_valueFunct['onkeydown'] = async function(e) {
+htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'] = async function(e) {
     var t = e.target;
 
     htmTxt_txtArea_update_line_numb(t);
@@ -1191,33 +1191,33 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['onkeydown'] = async function(e) 
    //updating autocomplete
    htmTxt_AUTOCOMP_update_core_n_get_autocomp( t );
 
-   if(e.key.toLowerCase() =='z' && htmTxt_cmd_ctrl_keydown){ // 'z'
+   if(e.keyCode == 90 && htmTxt_cmd_ctrl_keydown){ // 'z'
 		htmTxt_txtArea_undo_redo__UNDO( t);
 		return e.preventDefault(); }
-    if(e.key.toLowerCase()  == 'y' && htmTxt_cmd_ctrl_keydown){ // 'y'
+    if(e.keyCode == 89 && htmTxt_cmd_ctrl_keydown){ // 'y'
 		htmTxt_txtArea_undo_redo__REDO( t);
 		return e.preventDefault(); }
-    if(e.key.toLowerCase()  == 'v' && htmTxt_cmd_ctrl_keydown){ // 'v'
+    if(e.keyCode == 86 && htmTxt_cmd_ctrl_keydown){ // 'v'
 		htmTxt_txtArea_undo_redo__ADD( t);}
 
     // BELOW ctrl+'n' IS ctrl+shift+n: browsers block ctrl +n
-    if(e.key.toLowerCase()  == 'n' && htmTxt_cmd_ctrl_keydown){ // 'n' 
+    if(e.keyCode == 78 && htmTxt_cmd_ctrl_keydown){ // 'n' 
 	   htmTxt_AUTOCOMP_prompt_autcomp( t );
 	  
 	  return e.preventDefault(); }
 	
-    if(e.key  == 'Control'){ // 'cntrl' key
+    if(e.keyCode == 17){ // 'cntrl' key
 		htmTxt_cmd_ctrl_keydown = true; 
     }else{ if(!e.shiftKey){  htmTxt_cmd_ctrl_keydown = false; } }
 
     //entering 'NON_EDIT' mode
-    if( e.key == 'Escape' ){  
+    if( e.keyCode == 27 ){  
 		htmTxt_cmd_IN_NON_EDIT_MODE = true;
 		e.preventDefault(); 
 		return;
     }
    
-   if(e.key =='Delete' || e.key =='Backspace' || //'backspace'/'del'
+   if(e.keyCode == 8 || e.keyCode == 46 || //'backspace'/'del'
 	   e.key.length ==1 ){ 
 	if( t.selectionStart != t.selectionEnd){
 		htmTxt_txtArea_undo_redo__ADD( t); 
@@ -1227,15 +1227,15 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['onkeydown'] = async function(e) 
    //////////////////////////////////////////////	
    //JK- to turn to htmTxt_cmd_IN_NON_EDIT_MODE
    ////////////////
-   if(htmTxt_cmd_last_keycode_down == 'j'){//j
-	if( e.key.toLowerCase() =='k'){ htmTxt_cmd_last_keycode_down = ""; //k
+   if(htmTxt_cmd_last_keycode_down == 74){//j
+	if( e.keyCode == 75){ htmTxt_cmd_last_keycode_down = ""; //k
 		var tmp_i = t.selectionStart -1;
 		t.value = htmTxt_cmd_last_txtArea_value;
 		htmTxt_txtArea_jump_to_index(  t, tmp_i); 
 		htmTxt_cmd_IN_NON_EDIT_MODE = true;
 		return e.preventDefault(); }  }   
-   if(htmTxt_cmd_last_keycode_down == 'k'){//k
-	if( e.key.toLowerCase() =='j'){  htmTxt_cmd_last_keycode_down = "";  //j
+   if(htmTxt_cmd_last_keycode_down == 75){//k
+	if( e.keyCode == 74){  htmTxt_cmd_last_keycode_down = "";  //j
 		var tmp_i = t.selectionStart -1;
 		t.value = htmTxt_cmd_last_txtArea_value;
 		htmTxt_txtArea_jump_to_index(  t, tmp_i); 
@@ -1244,7 +1244,7 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['onkeydown'] = async function(e) 
 
 	// MUST be below the JK test above
     htmTxt_cmd_last_txtArea_value = t.value;
-    htmTxt_cmd_last_keycode_down = e.key;	
+    htmTxt_cmd_last_keycode_down = e.keyCode;	
    ///////////////////////////////////
    ///////////////////////////////////
    ///////////////////////////////////
@@ -1268,7 +1268,7 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['onkeydown'] = async function(e) 
 	}
 
     // INTERCEPT ENTER KEY
-    if (e.key == "Enter" && !e.shiftKey) { // ENTER
+    if (e.keyCode == 13 && !e.shiftKey) { // ENTER
 	htmTxt_txtArea_undo_redo__ADD( t);
 	
 	
