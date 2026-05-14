@@ -18,6 +18,25 @@ if (window.location.protocol === 'http:' ) {
         box-sizing: border-box; /* Ensures width:100% includes padding */
         -webkit-text-size-adjust: 100%;
     }
+   #htmTxt_AUTOCOMP_Carousel {
+        display: flex;
+        overflow-x: auto;
+        white-space: nowrap;
+        width: 100%; /* Shrink to screen width */
+        max-width: 100vw;
+        -webkit-overflow-scrolling: touch; /* Smooth swipe on iOS */
+        scrollbar-width: none; /* Hide scrollbar */
+    }
+    #htmTxt_AUTOCOMP_Carousel::-webkit-scrollbar {
+        display: none; /* Hide scrollbar Chrome/Safari */
+    }
+    
+    /* Ensure the mobile bar doesn't exceed screen width */
+    #bunker_mob_bar {
+        width: 100%;
+        max-width: 100vw;
+        box-sizing: border-box;
+    }
 </style>
 </head>
 <body>
@@ -854,6 +873,8 @@ function htmTxt_open_files__open_one_already_open(
 	htmTxt_cmd_LAST_TEXTAREA_SELECTED.value = tmpFile.text; 
 	htmTxt_txtArea_jump_to_index( 
 	    htmTxt_cmd_LAST_TEXTAREA_SELECTED, tmpFile.selectionStart );
+	htmTxt_cmd_last_txtArea_value = 
+		htmTxt_cmd_LAST_TEXTAREA_SELECTED.value;
 }
 function htmTxt_open_files__new( getFileName, getFileText, 
 			get_store_n_localStorage ){ //DEFAULTS TO TRUE
@@ -1143,6 +1164,9 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 		htmTxt_txtArea_add_lines_below(t, //t=textarea element
 		  false,//getJumpToEndOfNewText_bool, 
 		  htmTxt__copy_paste_tool_data[0]);
+    		
+		htmTxt_cmd_last_txtArea_value = t.value;
+		
 		htmTxt_txtArea_undo_redo__ADD( t);
 		 htmTxt_txtArea_update_line_numb(t);
 		e.preventDefault();
@@ -1252,7 +1276,15 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 // --- have 
 
 
-htmTxt_settup_main_textareas_cmdKey_valueFunct['onfocus'] = async function(e){ htmTxt_cmd_LAST_TEXTAREA_SELECTED = e.target;  }
+htmTxt_settup_main_textareas_cmdKey_valueFunct['onfocus'] = async function(e){ htmTxt_cmd_LAST_TEXTAREA_SELECTED = e.target;  
+	var t = e.target;
+	t.addEventListener('focus', function() {
+	    // Small delay to allow the mobile keyboard to finish its "push" animation
+	    setTimeout(() => {
+		window.scrollTo(0, document.body.scrollHeight);
+	    }, 300);
+	});
+}
 
 var htmTxt_last_line_break_disp_div = 
 	document.getElementById("htmTxt_last_line_break_disp_div");
@@ -1317,8 +1349,11 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['oninput'] = async function(e) {
     }
 
     // --- 2. INSERT MODE: THE 'JK' ESCAPE CATCHER ---
-    var lastTwo = t.value.slice(t.selectionStart - 2, t.selectionStart).toLowerCase();
-    if (lastTwo === "jk" || lastTwo === "kj") {
+    // Inside the oninput handler
+    var curPos = t.selectionStart;
+    var textChunk = t.value.slice(Math.max(0, curPos - 2), curPos).toLowerCase();
+
+     if (textChunk === "jk" || textChunk === "kj") {
         var curPos = t.selectionStart - 2;
         
         // ROLLBACK: Erase the 'jk'
