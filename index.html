@@ -9,6 +9,15 @@ if (window.location.protocol === 'http:' ) {
 
 <!-- :b: html :b: -->
 </script>
+<style>
+    /* Force textarea to feel like a "Bunker" */
+    textarea {
+        font-size: 16px !important; /* Critical to stop auto-zoom */
+        line-height: 1.25;
+        box-sizing: border-box; /* Ensures width:100% includes padding */
+        -webkit-text-size-adjust: 100%;
+    }
+</style>
 </head>
 <body>
 <button onclick="htmTxt_save_from_last_sel_text_area_from_file()">
@@ -55,6 +64,20 @@ COPY_PASTE BUFFER:<br>
 </select>
 
 <br>
+ <!-- Line Number Indicator -->
+    <button id="button_line_numb_div" > 
+        L: 1
+    </button>
+    <button onclick="htmTxt_txtArea_undo_redo__UNDO( htmTxt_cmd_LAST_TEXTAREA_SELECTED); htmTxt_cmd_LAST_TEXTAREA_SELECTED.focus();" > 
+        UNDO 
+    </button>
+    <button onclick="htmTxt_txtArea_undo_redo__REDO( htmTxt_cmd_LAST_TEXTAREA_SELECTED);  htmTxt_cmd_LAST_TEXTAREA_SELECTED.focus();"> 
+        REDO 
+    </button>   
+    <button onclick="htmTxt_AUTOCOMP_prompt_autcomp( htmTxt_cmd_LAST_TEXTAREA_SELECTED);  htmTxt_cmd_LAST_TEXTAREA_SELECTED.focus();"> 
+        AUTO_COMP  
+    </button>
+<br>
 <textarea autocapitalize="none" autocomplete="off" autocorrect="off"
 id="htmTxt_Main_textarea_div" placeholder="Paste here also adds to list..." style="font-family:monospace; width:100%; height:200px;"></textarea>
 <br>
@@ -81,22 +104,7 @@ USE ARROWS AND SHIFT TO SELECT (ctrl+arrow or ctrl+shift+arrow for words)
 
 <br> <br> <br> <br> <br> <br> <br> <br> <br> 
 
-    <!-- Gemini made this bar -->
-<div id="bunker_mob_bar" style="position:fixed; bottom:1px; left:20px; z-index:9999; display:flex; flex-direction:row; gap:8px; pointer-events:none;">
-    <!-- Line Number Indicator -->
-    <button id="button_line_numb_div" style="pointer-events:auto; touch-action: manipulation; min-width:40px; min-height:48px; font-size:16px; font-family:monospace; opacity: 0.8; font-weight:bold; flex-shrink: 0;"> 
-        L: 1
-    </button>
-    <button onclick="htmTxt_txtArea_undo_redo__UNDO( htmTxt_cmd_LAST_TEXTAREA_SELECTED); htmTxt_cmd_LAST_TEXTAREA_SELECTED.focus();" style="pointer-events:auto; touch-action: manipulation; min-width:0px; min-height:48px; font-size:16px; font-family:monospace; opacity: 0.8; font-weight:bold; flex-shrink: 0;"> 
-        UNDO 
-    </button>
-    <button onclick="htmTxt_txtArea_undo_redo__REDO( htmTxt_cmd_LAST_TEXTAREA_SELECTED);  htmTxt_cmd_LAST_TEXTAREA_SELECTED.focus();" style="pointer-events:auto; touch-action: manipulation; min-width:60px; min-height:48px; font-size:16px; font-family:monospace; opacity: 0.8; font-weight:bold; flex-shrink: 0;"> 
-        REDO 
-    </button>   
-    <button onclick="htmTxt_AUTOCOMP_prompt_autcomp( htmTxt_cmd_LAST_TEXTAREA_SELECTED);  htmTxt_cmd_LAST_TEXTAREA_SELECTED.focus();" style="pointer-events:auto; touch-action: manipulation; min-width:100px; min-height:48px; font-size:16px; font-family:monospace; font-weight:bold; flex-shrink: 0;"> 
-        AUTO_COMP  
-    </button>
-</div>
+    
 <script id="script_copy_paste_tool">
 // :b: copy paste tool :b:
 
@@ -443,7 +451,8 @@ function htmTxt_txtArea_undo_redo__ADD( t){
 	while(t.htmTxt_undo.length> htmTxt_undo_MAXLEN){
 		t.htmTxt_undo.shift(); } 
 	t.htmTxt_redo = undefined;
-	if( t.value != t.htmTxt_undo[ t.htmTxt_undo.length -1].txt ){
+	if(  t.htmTxt_undo.length == 0 || 
+		t.value != t.htmTxt_undo[ t.htmTxt_undo.length -1].txt ){
 	    t.htmTxt_undo.push( {txt:t.value, loc:t.selectionStart}); } }
 
 
@@ -1226,8 +1235,8 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['oninput'] = async function(e) {
     htmTxt_cmd_last_txtArea_value = t.value;
 
     // ADD THIS: Snap history on spacebar or new line during mobile typing
-    if (e.data === " " || e.data.length > 1 
-		|| e.inputType === "insertLineBreak") {
+    if (e.data != null &&(e.data === " " || e.data.length > 1 
+		|| e.inputType === "insertLineBreak")) {
         htmTxt_txtArea_undo_redo__ADD(t);
     }
 };
@@ -1287,7 +1296,9 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'] = async function(e) {
 
    //////////////////////////////////////////////	
    //JK- to turn to htmTxt_cmd_IN_NON_EDIT_MODE
+   // EDIT: now in oninput
    ////////////////
+   /*
    if(htmTxt_cmd_last_keycode_down == 74){//j
 	if( e.keyCode == 75){ htmTxt_cmd_last_keycode_down = ""; //k
 		var tmp_i = t.selectionStart -1;
@@ -1302,7 +1313,7 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'] = async function(e) {
 		htmTxt_txtArea_jump_to_index(  t, tmp_i); 
 		htmTxt_cmd_IN_NON_EDIT_MODE = true;
 		return e.preventDefault(); }  }
-
+ */
 	// MUST be below the JK test above
     htmTxt_cmd_last_txtArea_value = t.value;
     htmTxt_cmd_last_keycode_down = e.keyCode;	
