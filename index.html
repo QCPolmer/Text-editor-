@@ -28,7 +28,11 @@ NEW NAME- htmTxt --- prefix ALL with it.
 requites https (should auto-set) <br>
 PULLS COPY/PASTES FROM MAIN TEXT AREA, so just working will fill it.<br>
 COPY_PASTE BUFFER:<br>
-
+<select id="htmTxt_CopyPasteManager_div_2"  >
+       <option onclick="htmTxt_copy_paste_tool_setprev_copy_from_index(11);">No</option>
+       <option onclick="htmTxt_copy_paste_tool_setprev_copy_from_index(22);">Yes</option>
+</select>
+<br>
 <button id="htmTxt_PasteTextBox_div" value="" onclick="htmTxt_copy_paste_tool_update()">Add paste-buffer-text too buffer
 (or paste in box below)</button>
 
@@ -137,8 +141,14 @@ document.getElementById("htmTxt_PasteBox").onpaste = async function(e) {
 
 var htmTxt_CopyPasteManager_div = 
 	document.getElementById("htmTxt_CopyPasteManager_div");
+var htmTxt_CopyPasteManager_div_2 =
+	document.getElementById("htmTxt_CopyPasteManager_div_2");
 htmTxt_CopyPasteManager_div.onchange = function() {
-    htmTxt_copy_paste_tool_setprev_copy_from_index(this.value); };
+    htmTxt_copy_paste_tool_setprev_copy_from_index(this.value);
+    htmTxt_cmd_LAST_TEXTAREA_SELECTED.focus();};
+htmTxt_CopyPasteManager_div_2.onchange = function() {
+    htmTxt_copy_paste_tool_setprev_copy_from_index(this.value);
+    htmTxt_cmd_LAST_TEXTAREA_SELECTED.focus(); };
 
 async function htmTxt_copy_paste_tool_setprev_copy_from_index(getIndexIn){
 	await htmTxt__copyText_to_clipboard(htmTxt__copy_paste_tool_data[getIndexIn]);
@@ -168,6 +178,7 @@ async function htmTxt_copy_paste_tool_update( getPasteData_DISABLE_FALLBACK,
 		+htmTxt__copy_paste_tool_data[i].trim().replace(/</g, "&lt;") 
 		.slice(0,20)+`</option>`; }
 	htmTxt_CopyPasteManager_div.innerHTML = outHTML;
+	htmTxt_CopyPasteManager_div_2.innerHTML = outHTML;
 }
 ///////////////////////////////////////////////
 //// COPY PASTE CORE GET/SET (for compatability)
@@ -679,7 +690,8 @@ function htmTxt_open_files_autosave__update( //lazy fuction
 		} else {	
 		    htmTxt_open_files__open_one_already_open(this.value);
 		}
-		this.value = ""; // Reset
+		this.value = ""; // Reset	
+		htmTxt_cmd_LAST_TEXTAREA_SELECTED.focus();
 	    };
 	}
 }
