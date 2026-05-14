@@ -1172,6 +1172,55 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['onclick'] = async function(e){
 	htmTxt_txtArea_update_line_numb(t);
 }
 
+// FROM GEMINI: to allow use on mobile 
+//		(ask keypresses are broken between them)
+// This catches the text AFTER the mobile keyboard forces it in
+htmTxt_settup_main_textareas_cmdKey_valueFunct['oninput'] = async function(e) {
+    var t = e.target;
+
+    // --- 1. NON-EDIT MODE COMMAND CATCHER ---
+    if (htmTxt_cmd_IN_NON_EDIT_MODE) {
+        // Find the character the mobile keyboard just forced in
+        var typedChar = t.value.slice(t.selectionStart - 1, t.selectionStart).toLowerCase();
+        
+        // ROLLBACK: Erase the character immediately so it doesn't mess up the file
+        t.value = htmTxt_cmd_last_txtArea_value;
+        
+        // Build a "Fake Event" to feed your existing logic
+        if (typedChar) {
+            var fakeEvent = {
+                target: t,
+                key: typedChar,
+                keyCode: typedChar.toUpperCase().charCodeAt(0), // Maps 'd' to 68, 'j' to 74
+                shiftKey: false, // Can't easily detect mobile shift here, but covers base commands
+                preventDefault: function(){}
+            };
+            // Route it to your engine!
+            htmTxt_cmd_NON_EDIT_MODE(fakeEvent);
+        }
+        return;
+    }
+
+    // --- 2. INSERT MODE: THE 'JK' ESCAPE CATCHER ---
+    var lastTwo = t.value.slice(t.selectionStart - 2, t.selectionStart).toLowerCase();
+    if (lastTwo === "jk" || lastTwo === "kj") {
+        var curPos = t.selectionStart - 2;
+        
+        // ROLLBACK: Erase the 'jk'
+        t.value = t.value.slice(0, curPos) + t.value.slice(t.selectionStart);
+        htmTxt_txtArea_jump_to_index(t, curPos);
+        
+        // Lock it down
+        htmTxt_cmd_IN_NON_EDIT_MODE = true;
+        htmTxt_cmd_last_txtArea_value = t.value;
+        return;
+    }
+
+    // If it's normal typing, just update the tracker
+    htmTxt_cmd_last_txtArea_value = t.value;
+};
+
+
 // :b: edit mode :b:
 
 var htmTxt_cmd_doing_ctrl_o_tab_o_esc_opt = false;
