@@ -1,8 +1,9 @@
 <html>
 <head>
-<script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<script>
+
 // required for htmTxt_CopyPasteManager 
 if (window.location.protocol === 'http:' ) {
     window.location.protocol = 'https:'; } 
@@ -74,10 +75,20 @@ COPY_PASTE BUFFER:<br>
     <button onclick="htmTxt_txtArea_undo_redo__REDO( htmTxt_cmd_LAST_TEXTAREA_SELECTED);  htmTxt_cmd_LAST_TEXTAREA_SELECTED.focus();"> 
         REDO 
     </button>   
-    <button onclick="htmTxt_AUTOCOMP_prompt_autcomp( htmTxt_cmd_LAST_TEXTAREA_SELECTED);  htmTxt_cmd_LAST_TEXTAREA_SELECTED.focus();"> 
+
+<div id="htmTxt_AUTOCOMP_Carousel" style="display:flex; overflow-x:auto; background:#eee; border:1px solid #000; height:30px; align-items:center;">
+    <span style="font-size:10px; color:#666;">...type...</span>
+</div>
+<!--
+<select id="htmTxt_AUTOCOMP_Dropdown" style="font-family:monospace; background-color:#e0ffe0;">
+    <option value="">AUTO_COMP</option>
+</select>
+-->
+   <!--
+       <button onclick="htmTxt_AUTOCOMP_prompt_autcomp( htmTxt_cmd_LAST_TEXTAREA_SELECTED);  htmTxt_cmd_LAST_TEXTAREA_SELECTED.focus();"> 
         AUTO_COMP  
-    </button>
-<br>
+       </button>
+	-->
 <textarea autocapitalize="none" autocomplete="off" autocorrect="off"
 id="htmTxt_Main_textarea_div" placeholder="Paste here also adds to list..." style="font-family:monospace; width:100%; height:200px;"></textarea>
 <br>
@@ -630,6 +641,43 @@ var _htmTxt_open_files__local_storage_var_name = "htmTxt_open_files";
 // --------- GOING TO USE 'prompt' for handling for now.
 // htmTxt_cmd_LAST_TEXTAREA_SELECTED
 
+//gemini made this one
+function htmTxt_AUTOCOMP_refresh_carousel() {
+    var t = htmTxt_cmd_LAST_TEXTAREA_SELECTED;
+    var carousel = document.getElementById("htmTxt_AUTOCOMP_Carousel");
+    if (!carousel) return;
+
+    var tmp_i = htmTxt_txtArea_grab_word_look_back_INDEX_START(t);
+    var fragment = t.value.slice(tmp_i, t.selectionStart);
+
+    // Only run if we have a fragment to match
+    if (fragment.length < 2) {
+        carousel.innerHTML = ""; 
+        return;
+    }
+
+    var matches = htmTxt_AUTOCOMP_update_core_n_get_autocomp(t, fragment);
+    
+    if (matches && matches.length > 0) {
+        carousel.innerHTML = ""; // Clear existing
+        matches.forEach(word => {
+            var btn = document.createElement("button");
+            btn.innerText = word;
+            // Minimal styling: just enough margin to separate them
+            btn.style = "margin:2px; font-family:monospace; flex-shrink:0;";
+            
+            btn.onclick = function() {
+                htmTxt_txtArea_undo_redo__ADD(t);
+                t.value = t.value.slice(0, tmp_i) + word + t.value.slice(t.selectionStart);
+                htmTxt_txtArea_jump_to_index(t, tmp_i + word.length);
+                t.focus();
+                htmTxt_AUTOCOMP_refresh_carousel();
+            };
+            carousel.appendChild(btn);
+        });
+    }
+}
+
 var htmTxt_save_to_local_disp_div = 
 	document.getElementById( "htmTxt_save_to_local_disp_div");
 function htmTxt_open_files__toggle_save_too_local(){
@@ -650,6 +698,7 @@ function htmTxt_open_files_autosave__update( //lazy fuction
 	getForceImmediate_autosave__OPTIONAL,
 	getDO_NOT_UPDATE_FILE_MENU__OPTIONAL ){
 
+	
 
 	htmTxt_CURRENT_FILENAME_div.innerHTML = 
 		htmTxt_CURRENT_FILENAME;
@@ -1013,6 +1062,7 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 		    htmTxt_txtArea_jump_to_index( t,
 			htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row + 
 			htmTxt_txtArea_grab_curLine_INDEX_START(t));}
+		t.focus();
 		return e.preventDefault();  }
 	if(e.keyCode == 74){ // 'j'
 		if(htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row ==-1){
@@ -1029,38 +1079,47 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 		    htmTxt_txtArea_jump_to_index( t,
 			htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row + 
 			htmTxt_txtArea_grab_curLine_INDEX_START(t));}
+		t.focus();
 		return e.preventDefault(); }
 	htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row = -1;
 	if(e.keyCode == 72){ // 'h'
 		htmTxt_txtArea_jump_to_index( t, t.selectionStart-1);
+		t.focus();
 		return e.preventDefault();  }
 	if(e.keyCode == 76){ // 'l'
 		htmTxt_txtArea_jump_to_index( t, t.selectionStart+1);
+		t.focus();
 		return e.preventDefault(); }
 	if(e.keyCode == 52){ // '$'
 		htmTxt_txtArea_jump_to_index( t, 
 			htmTxt_txtArea_grab_curLine_INDEX_END(t));
+		t.focus();
 		return e.preventDefault(); }
 	if(e.keyCode == 54){ // '^'
 		htmTxt_txtArea_jump_to_index( t, 
 			htmTxt_txtArea_grab_curLine_INDEX_START(t));
+		t.focus();
 		return e.preventDefault(); }
 	if(e.keyCode == 87){ // 'w'
 		htmTxt_txtArea_select_word(t);
 		htmTxt_txtArea_jump_to_index( t, t.selectionEnd+1);
 		htmTxt_txtArea_select_word(t);
+		t.focus();
 		return e.preventDefault(); }
 	if(e.keyCode == 66){ // 'b'
 		htmTxt_txtArea_jump_to_index( t, t.selectionStart-2);
 		htmTxt_txtArea_select_word(t);
+		t.focus();
 		return e.preventDefault(); }
 
 	if(e.keyCode==17){ // 'ctrl', exit mode!
 		htmTxt_cmd_IN_NON_EDIT_MODE = false; return;}
 	if(e.keyCode == 73){ // 'i' key
-		htmTxt_cmd_IN_NON_EDIT_MODE = false; }
+		htmTxt_cmd_IN_NON_EDIT_MODE = false; 
+		htmTxt_AUTOCOMP_refresh_carousel();}
 	if(e.keyCode == 65){ // 'a' key
-		t.selectionStart +=1; t.selectionEnd +=1; htmTxt_cmd_IN_NON_EDIT_MODE = false; }
+		t.selectionStart +=1; t.selectionEnd +=1; htmTxt_cmd_IN_NON_EDIT_MODE = false; 
+		htmTxt_AUTOCOMP_refresh_carousel();}
 	if(e.keyCode == 80){ // 'p'
 		htmTxt_txtArea_add_lines_below(t, //t=textarea element
 		  false,//getJumpToEndOfNewText_bool, 
@@ -1211,7 +1270,8 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['onclick'] = async function(e){
 // This catches the text AFTER the mobile keyboard forces it in
 htmTxt_settup_main_textareas_cmdKey_valueFunct['oninput'] = async function(e) {
     var t = e.target;
-
+    
+   
     // --- 1. NON-EDIT MODE COMMAND CATCHER ---
     if (htmTxt_cmd_IN_NON_EDIT_MODE && 
 	(e.key.length > 1 && e.key != "Escape" && e.key != "Enter")) {
@@ -1399,6 +1459,9 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'] = async function(e) {
             return;
         }
     } 
+   
+    //for dropdown menu
+     htmTxt_AUTOCOMP_refresh_carousel();
 };
 
 ///////////////////////////////////
