@@ -1,6 +1,8 @@
 <html>
 <head>
 <script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 // required for htmTxt_CopyPasteManager 
 if (window.location.protocol === 'http:' ) {
     window.location.protocol = 'https:'; } 
@@ -441,7 +443,7 @@ function htmTxt_txtArea_undo_redo__ADD( t){
 	while(t.htmTxt_undo.length> htmTxt_undo_MAXLEN){
 		t.htmTxt_undo.shift(); } 
 	t.htmTxt_redo = undefined;
-	if( t.value != t.htmTxt_undo[ t.htmTxt_undo.length -1] ){
+	if( t.value != t.htmTxt_undo[ t.htmTxt_undo.length -1].txt ){
 	    t.htmTxt_undo.push( {txt:t.value, loc:t.selectionStart}); } }
 
 
@@ -617,7 +619,8 @@ function htmTxt_open_files__toggle_save_too_local(){
 var htmTxt_open_files_autosave__save_every_ticks = 100; 
 var htmTxt_open_files_autosave__cur_tick = 0;
 function htmTxt_open_files_autosave__update( //lazy fuction
-	getForceImmediate_autosave__OPTIONAL ){
+	getForceImmediate_autosave__OPTIONAL,
+	getDO_NOT_UPDATE_FILE_MENU__OPTIONAL ){
 
 
 	htmTxt_CURRENT_FILENAME_div.innerHTML = 
@@ -660,6 +663,7 @@ function htmTxt_open_files_autosave__update( //lazy fuction
 				clipboard_data: 
 				    htmTxt__copy_paste_tool_data }) );  
 		}
+	if(getDO_NOT_UPDATE_FILE_MENU__OPTIONAL){ return;}
 	/////////////
 	/// FILE SWITCH MENU UPDATE
 	// added by gemini:
@@ -688,6 +692,7 @@ function htmTxt_open_files_autosave__update( //lazy fuction
 			htmTxt_open_files__open_one_already_open(Object.keys(_htmTxt_open_files)[0]);
 		    }
 		} else {	
+		    htmTxt_open_files_autosave__update( true, true );
 		    htmTxt_open_files__open_one_already_open(this.value);
 		}
 		this.value = ""; // Reset	
@@ -740,6 +745,7 @@ function htmTxt_open_files__rename_open_file(){
 function htmTxt_open_files__open_one_already_open( 
 		getFileName_too_open__OPTIONAL){ //prompts if undefined
 	
+
 	if( getFileName_too_open__OPTIONAL != null){
 	   	var tmpFileName = getFileName_too_open__OPTIONAL;
 	}else{ 
@@ -1218,6 +1224,12 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['oninput'] = async function(e) {
 
     // If it's normal typing, just update the tracker
     htmTxt_cmd_last_txtArea_value = t.value;
+
+    // ADD THIS: Snap history on spacebar or new line during mobile typing
+    if (e.data === " " || e.data.length > 1 
+		|| e.inputType === "insertLineBreak") {
+        htmTxt_txtArea_undo_redo__ADD(t);
+    }
 };
 
 
