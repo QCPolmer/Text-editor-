@@ -39,7 +39,8 @@ COPY_PASTE BUFFER:<br>
 <textarea id="htmTxt_PasteBox" placeholder="Paste here also adds to list..." style="width:100%; height:50px;"></textarea>
 
 <br><br>
-<button onclick="htmTxt_cmd_GO_TO_URL__ON_LINE_N_GOTO_NXT_LINE()"> GOTO_URL_ON_LINE_&_GOTO_NEXT_LINE</button>
+<button onclick="htmTxt_cmd_GO_TO_URL__ON_LINE_N_GOTO_NXT_LINE()"> GOTO_URL_ON_LINE_&_GOTO_NXT_LINE</button><select id="htmTxt_FileQuickSwitch_div" style="font-family:monospace; height:40px; border:2px solid #000;">
+    </select>
 <br>
 <b id="htmTxt_last_line_break_disp_div">L:1 </b>
 ::
@@ -644,6 +645,39 @@ function htmTxt_open_files_autosave__update( //lazy fuction
 				clipboard_data: 
 				    htmTxt__copy_paste_tool_data }) );  
 		}
+	/////////////
+	/// FILE SWITCH MENU UPDATE
+	// added by gemini:
+	var switcher = document.getElementById("htmTxt_FileQuickSwitch_div");
+	if (switcher) {
+	    var fileKeys = Object.keys(_htmTxt_open_files);
+	    var optionsHTML = `<option value="">-- SWITCH FILE --</option>`;
+	    optionsHTML += `<option value="RENAME_FILE"> 
+		[!] RENAME CURRENT </option>`;
+	    optionsHTML += `<option value="REMOVE_FILE"> 
+		[!] REMOVE CURRENT </option>`;
+	    
+	    for (var i = 0; i < fileKeys.length; i++) {
+		var selected = (fileKeys[i] === htmTxt_CURRENT_FILENAME) ? "selected" : "";
+		optionsHTML += `<option value="${fileKeys[i]}" ${selected}>${fileKeys[i]}</option>`;
+	    }
+	    switcher.innerHTML = optionsHTML;
+
+	    switcher.onchange = function() {
+		if (this.value === "") return;
+		if (this.value === "RENAME_FILE") htmTxt_open_files__rename_open_file();
+		else if (this.value === "REMOVE_FILE") {
+		    if(prompt("type 'd' to delete").trim() === 'd') {
+			delete _htmTxt_open_files[htmTxt_CURRENT_FILENAME];
+			htmTxt_open_files__add_default_if_no_files();
+			htmTxt_open_files__open_one_already_open(Object.keys(_htmTxt_open_files)[0]);
+		    }
+		} else {	
+		    htmTxt_open_files__open_one_already_open(this.value);
+		}
+		this.value = ""; // Reset
+	    };
+	}
 }
 
 
@@ -676,17 +710,15 @@ function htmTxt_open_files__rename_open_file(){
 	if(tmpName == null || tmpName.trim() == ""){return;}
 	var tmpCurData = _htmTxt_open_files[
 		htmTxt_CURRENT_FILENAME ];
-	_htmTxt_open_files = _htmTxt_open_files.filter(
-	  function(a){	
-		if( a.name != htmTxt_CURRENT_FILENAME){
-				return 1;}} );
+	delete _htmTxt_open_files[ htmTxt_CURRENT_FILENAME];
 
 	var tmpOut = htmTxt_open_files__new( tmpName, 
 			htmTxt_cmd_LAST_TEXTAREA_SELECTED.value, 
 			tmpCurData.store_n_localStorage );
-	tmpOut.selectionStart = tmpCurData.selectionStart
+	tmpOut.selectionStart = tmpCurData.selectionStart;
 	htmTxt_txtArea_jump_to_index( 
 	    htmTxt_cmd_LAST_TEXTAREA_SELECTED, tmpOut.selectionStart);
+	htmTxt_open_files_autosave__update( true );	
 }
 
 function htmTxt_open_files__open_one_already_open( 
@@ -831,6 +863,24 @@ async function htmTxt_cmd_NON_EDIT_MENU(e){
 		htmTxt_open_files_open_files__menu(true); };
 	tmpOptions[("Files_Menu")] = 
 		htmTxt_open_files_open_files__menu;
+	tmpOptions[("CopyPaste_select")] = async function(){
+		prompt("WARNING: the dropdown menu on page for clipboard"
+			+"\n works better(clipboard needs click detection)"
+			+"\n (though 'p' for drop lines works)");
+		var tmpChoices = htmTxt__copy_paste_tool_data
+			.map( function(a){return a.slice(0,10);} );
+		var tmpPrompt = htmTxt_Prompt_Menu( tmpChoices );
+		if(tmpPrompt == null){ return;}	
+		var tmpCopy_data = htmTxt__copy_paste_tool_data[
+			tmpChoices.indexOf(tmpPrompt) ];
+		await htmTxt__copyText_to_clipboard(tmpCopy_data);
+		await htmTxt_copy_paste_tool_update( true, tmpCopy_data);
+		//gemini added
+		try { await htmTxt__copyText_to_clipboard(tmpCopy_data);
+   		 } catch(e) {
+        		console.warn("System clipboard blocked, but internal buffer updated.");
+    		}	 
+	};
 	tmpOptions[("Jump To :b"+": tag")] = htmTxt_txtArea_b_tag_jump;
 	tmpOptions[("Find_n_replace")] = 
 	function(){ htmTxt_txtArea_undo_redo__ADD(t);
@@ -869,7 +919,8 @@ async function htmTxt_cmd_NON_EDIT_MENU(e){
 	   window.location.reload();
 	}; 
 
-	var tmpMenu_out = htmTxt_Prompt_Menu( Object.keys(tmpOptions) );
+	var tmpMenu_out = await 
+		htmTxt_Prompt_Menu( Object.keys(tmpOptions) );
 	if(tmpMenu_out == null){ return;}
 
 	tmpOptions[tmpMenu_out]( t);
