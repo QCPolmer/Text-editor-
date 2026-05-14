@@ -1,0 +1,1294 @@
+<html>
+<head>
+<script>
+// required for htmTxt_CopyPasteManager 
+if (window.location.protocol === 'http:' ) {
+    window.location.protocol = 'https:'; } 
+
+<!-- :b: html :b: -->
+</script>
+</head>
+<body>
+<button onclick="htmTxt_save_from_last_sel_text_area_from_file()">
+<H3>Save to file</H3> </button>
+<button onclick="htmTxt_load_to_last_sel_text_area_from_file()">
+<H3>Load from file</H3> </button>
+<button onclick="htmTxt_open_files_open_files__menu()">
+<H3>Open files menu</H3> </button>
+<br>
+<b> DROP FILES ON MAIN TEXT_AREA TO LOAD AS WELL <b>
+<br>
+<button onclick="htmTxt_open_files__toggle_save_too_local()">
+<H3>
+<b id="htmTxt_save_to_local_disp_div"> ON</b>
+Storing file in localStorage(toggle)? 
+</H3> </button>
+
+NEW NAME- htmTxt --- prefix ALL with it. 
+requites https (should auto-set) <br>
+PULLS COPY/PASTES FROM MAIN TEXT AREA, so just working will fill it.<br>
+COPY_PASTE BUFFER:<br>
+<select id="htmTxt_CopyPasteManager_div"  >
+       <option onclick="htmTxt_copy_paste_tool_setprev_copy_from_index(11);">No</option>
+       <option onclick="htmTxt_copy_paste_tool_setprev_copy_from_index(22);">Yes</option>
+</select>
+<br>
+<button id="htmTxt_PasteTextBox_div" value="" onclick="htmTxt_copy_paste_tool_update()">Add paste-buffer-text too buffer
+(or paste in box below)</button>
+
+<textarea id="htmTxt_PasteBox" placeholder="Paste here also adds to list..." style="width:100%; height:50px;"></textarea>
+
+<br><br>
+<button onclick="htmTxt_cmd_GO_TO_URL__ON_LINE_N_GOTO_NXT_LINE()"> GOTO_URL_ON_LINE_&_GOTO_NEXT_LINE</button>
+<br>
+<b id="htmTxt_last_line_break_disp_div">L:1 </b>
+::
+<b id="htmTxt_CURRENT_FILENAME_div"></b>
+--- MAIN TEXT BOX:  <br>
+<textarea autocapitalize="none" autocomplete="off" autocorrect="off"
+id="htmTxt_Main_textarea_div" placeholder="Paste here also adds to list..." style="font-family:monospace; width:100%; height:200px;"></textarea>
+<br>
+<b id="htmTxt_last_line_break_disp2_div">L:1 </b>
+<br>
+JK/ DF(for menu) works! ('cntrl + SHIFT+ n' for autocomp, NEEDS SHIFT)
+<br>
+EXIT EDIT MODE: 'esc' OR 'kj/jk', (TAB on select lines indents/TAB+SHIFT de-indents)--- 
+<BR>
+CTRL- exits non-edit mode too!
+<BR>
+SELECTED AREAS WILL BE Y-anked or P-ut, no 'numbers' based repeats
+<BR>
+NOTE: copy paste buffer isn't perfect, as it would make stuff odd: 
+ctrl+v always works though, and ctrl + (uppercase)Y and ctrl+p work)
+<br>
+USE ARROWS AND SHIFT TO SELECT (ctrl+arrow or ctrl+shift+arrow for words)
+<br> ON SCREEN CMDS: '; htm_t.value' -> start lines with ';,
+<br>	htm_t is the textArea object, htm.value is the text .  
+<br>    htm_get_paste() and htm_copy(txt) for clipboard,
+<br> //START//...//END// (each should take up a line) for multi-line js, 
+<br> press 'enter' on bottom line!
+
+<br> <br> <br> <br> <br> <br> <br> <br> <br> 
+
+    <!-- Gemini made this bar -->
+<div id="bunker_mob_bar" style="position:fixed; bottom:1px; left:20px; z-index:9999; display:flex; flex-direction:row; gap:8px; pointer-events:none;">
+    <!-- Line Number Indicator -->
+    <button id="button_line_numb_div" style="pointer-events:auto; touch-action: manipulation; min-width:40px; min-height:48px; font-size:16px; font-family:monospace; opacity: 0.8; font-weight:bold; flex-shrink: 0;"> 
+        L: 1
+    </button>
+    <button onclick="htmTxt_txtArea_undo_redo__UNDO( htmTxt_cmd_LAST_TEXTAREA_SELECTED); htmTxt_cmd_LAST_TEXTAREA_SELECTED.focus();" style="pointer-events:auto; touch-action: manipulation; min-width:0px; min-height:48px; font-size:16px; font-family:monospace; opacity: 0.8; font-weight:bold; flex-shrink: 0;"> 
+        UNDO 
+    </button>
+    <button onclick="htmTxt_txtArea_undo_redo__REDO( htmTxt_cmd_LAST_TEXTAREA_SELECTED);  htmTxt_cmd_LAST_TEXTAREA_SELECTED.focus();" style="pointer-events:auto; touch-action: manipulation; min-width:60px; min-height:48px; font-size:16px; font-family:monospace; opacity: 0.8; font-weight:bold; flex-shrink: 0;"> 
+        REDO 
+    </button>   
+    <button onclick="htmTxt_AUTOCOMP_prompt_autcomp( htmTxt_cmd_LAST_TEXTAREA_SELECTED);  htmTxt_cmd_LAST_TEXTAREA_SELECTED.focus();" style="pointer-events:auto; touch-action: manipulation; min-width:100px; min-height:48px; font-size:16px; font-family:monospace; font-weight:bold; flex-shrink: 0;"> 
+        AUTO_COMP  
+    </button>
+</div>
+<script id="script_copy_paste_tool">
+// :b: copy paste tool :b:
+
+var htmTxt_settup_main_textareas_cmdKey_valueFunct = {};
+function htmTxt_settup_main_textareas(getTextArea_element){
+	var tmpkeys = Object.keys(
+		htmTxt_settup_main_textareas_cmdKey_valueFunct );
+	for(var i=0; i< tmpkeys.length; i+=1){
+	   console.log(tmpkeys[i]);
+	   getTextArea_element.addEventListener(tmpkeys[i],
+	      htmTxt_settup_main_textareas_cmdKey_valueFunct[tmpkeys[i]]);
+	  if(getTextArea_element[tmpkeys[i]] == null){
+	     getTextArea_element[tmpkeys[i]]= 
+	       htmTxt_settup_main_textareas_cmdKey_valueFunct[tmpkeys[i]];
+	  }
+}	}
+/////////////////////////////////////////////////////////
+/////// COPY PASTE MANAGER BINDINGS/ FUNCTIONS
+//////////////////////////////////////////
+// these document binding things are by gemini
+htmTxt_settup_main_textareas_cmdKey_valueFunct['copy'] = function(e) {
+    var selectedText = window.getSelection().toString();
+    if (selectedText.trim() !== "") {
+        console.log("Caught a copy event: " + selectedText);
+        htmTxt_copy_paste_tool_update(true, selectedText);} };
+htmTxt_settup_main_textareas_cmdKey_valueFunct['cut'] =
+	htmTxt_settup_main_textareas_cmdKey_valueFunct['copy'];
+htmTxt_settup_main_textareas_cmdKey_valueFunct['paste'] = function(e) {
+    var pastedData = (e.clipboardData || window.clipboardData).getData('text');
+    if (pastedData && pastedData.trim() !== "") {
+        console.log("Caught a paste event: " + pastedData);
+        htmTxt_copy_paste_tool_update(true, pastedData); } };
+document.getElementById("htmTxt_PasteBox").onpaste = async function(e) {
+    setTimeout(async () => {
+	if( document.getElementById("htmTxt_PasteBox").value != ""){
+		htmTxt_copy_paste_tool_update( null,
+			document.getElementById("htmTxt_PasteBox").value );
+		document.getElementById("htmTxt_PasteBox").value ="";}
+	},10);}
+
+///////////////////
+/// COPY PASTE MANAGER UPDATE/SET FROM INDEX
+///////////////////////////////
+
+var htmTxt_CopyPasteManager_div = 
+	document.getElementById("htmTxt_CopyPasteManager_div");
+htmTxt_CopyPasteManager_div.onchange = function() {
+    htmTxt_copy_paste_tool_setprev_copy_from_index(this.value); };
+
+async function htmTxt_copy_paste_tool_setprev_copy_from_index(getIndexIn){
+	await htmTxt__copyText_to_clipboard(htmTxt__copy_paste_tool_data[getIndexIn]);
+	await htmTxt_copy_paste_tool_update( false,
+		htmTxt__copy_paste_tool_data[getIndexIn] ); }
+var htmTxt__copy_paste_tool_data = [];
+var htmTxt__copy_paste_tool_data_MAX_LENGTH = 20;
+async function htmTxt_copy_paste_tool_update( getPasteData_DISABLE_FALLBACK,
+		getTxtInstead_of_pasteData_OPTIONAL ){
+	// if fallback not disabled, will prompt for paste data if 
+	//	default fails. 
+	var tmpTxt = await htmTxt__getPasteText_from_clipboard(
+		getPasteData_DISABLE_FALLBACK, 
+		getTxtInstead_of_pasteData_OPTIONAL );
+	if(tmpTxt != null && tmpTxt != htmTxt__copy_paste_tool_data[0] ){
+		if(-1 != htmTxt__copy_paste_tool_data.indexOf(tmpTxt) ){
+			htmTxt__copy_paste_tool_data.unshift(
+			    htmTxt__copy_paste_tool_data.splice(
+			    htmTxt__copy_paste_tool_data.indexOf(tmpTxt),1)[0]);
+		}else{ htmTxt__copy_paste_tool_data.unshift(tmpTxt); }}
+	if(htmTxt__copy_paste_tool_data.length> htmTxt__copy_paste_tool_data_MAX_LENGTH){
+		htmTxt__copy_paste_tool_data.pop(); }
+	var outHTML = ""; 
+	for(var i=0; i< htmTxt__copy_paste_tool_data.length; i+=1){
+		outHTML = outHTML + 
+		`<option value="`+ i + `">` 
+		+htmTxt__copy_paste_tool_data[i].trim().replace(/</g, "&lt;") 
+		.slice(0,20)+`</option>`; }
+	htmTxt_CopyPasteManager_div.innerHTML = outHTML;
+}
+///////////////////////////////////////////////
+//// COPY PASTE CORE GET/SET (for compatability)
+/////////////////////////////////
+async function htmTxt__copyText_to_clipboard(t) { //t== text
+  if (!t) return;
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(t);
+  } else { var s = document.createElement('textarea');
+    s.value = t; document.body.appendChild(s); s.select();
+    if (!document.execCommand('copy')) window.prompt("Copy manually:", t);
+    document.body.removeChild(s);
+}  }
+//defaults to null
+async function htmTxt__getPasteText_from_clipboard(disable_fallback_to_prompt_OPTIONAL, getTxtInstead_OPTIONAL) { 
+  var t = getTxtInstead_OPTIONAL;
+  // Try modern API first (Fails on file://)
+  if (t == null && navigator.clipboard && window.isSecureContext) {
+    try { t = await navigator.clipboard.readText(); } catch (e) {} }
+  // Return text, or prompt if missing and not disabled
+  if(disable_fallback_to_prompt_OPTIONAL == true || t !=  null){
+	return t;}
+  return window.prompt("Paste here (Ctrl+V):", "");
+}
+
+///////////////////////////////////////////////
+///////// :b: TEXT AREA LINE HANDLING:b: :
+//////////////////////////////////////////////
+function htmTxt_txtArea_grab_curLine_INDEX_START(t){ // textarea element
+	return t.value.lastIndexOf('\n', t.selectionStart - 1) + 1;}
+function htmTxt_txtArea_grab_curLine_INDEX_END(t){ // textarea element
+	var tmpEnd = t.value.indexOf('\n', t.selectionStart);
+	if(tmpEnd == -1){ tmpEnd = t.value.length;} 
+	return tmpEnd}
+var htmTxt_txtArea_grab_word_look_back__ACCEPTABLE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.1234567890_";
+function htmTxt_txtArea_grab_word_look_back_INDEX_START(t){
+	var tmpStart = t.selectionStart-1;
+	while(tmpStart!=-1 &&  -1 != 
+		htmTxt_txtArea_grab_word_look_back__ACCEPTABLE_CHARS
+			.indexOf( t.value[tmpStart])){
+		tmpStart-=1; }
+	if(tmpStart != t.selectionStart){ tmpStart +=1;}
+	return tmpStart; }
+function htmTxt_txtArea_grab_word_look_forward_INDEX_END(t){
+	var tmpEnd = t.selectionStart;
+	while(tmpEnd < t.value.length &&  -1 != 
+		htmTxt_txtArea_grab_word_look_back__ACCEPTABLE_CHARS
+			.indexOf( t.value[tmpEnd])){
+		tmpEnd+=1; }
+	return tmpEnd; }
+function htmTxt_txtArea_select_word(t){ // also returns word
+	var tmpStart= htmTxt_txtArea_grab_word_look_back_INDEX_START(t );
+	var tmpEnd=htmTxt_txtArea_grab_word_look_forward_INDEX_END(t);
+	if(tmpStart == -1){ tmpStart = 0;}
+	if(tmpEnd >= t.value.length){ tmpEnd = t.value.length-1; } 
+	t.selectionStart = tmpStart; t.selectionEnd= tmpEnd;
+	return t.value.slice(tmpStart, tmpEnd);  }
+function htmlTxt_txtArea_word_search__GET_WORD_START_INDEX( 
+	getSearchForward, getCaseSenstive,
+		getWords_to_search_for, t){ // textarea element
+	var getStartIndex = t.selectionStart;
+	var getText_to_Search = t.value;
+	if( !getCaseSenstive){
+	   getWords_to_search_for = getWords_to_search_for.toUpperCase();
+	   getText_to_Search = getText_to_Search.toUpperCase(); } 
+	if(getSearchForward== true){
+		return getText_to_Search.indexOf(
+			getWords_to_search_for, getStartIndex);
+	}else{ return getText_to_Search.lastIndexOf(
+			getWords_to_search_for, getStartIndex); }  }
+var htmlTxt_txtArea_matching_bracket__BRACKETS = {
+	"{":{char:"}",direction:1}, "}":{char:"{",direction:-1},
+	"[":{char:"]",direction:1}, "]":{char:"[",direction:-1},
+	"(":{char:")",direction:1}, ")":{char:"(",direction:-1},
+	"<":{char:">",direction:1}, ">":{char:"<",direction:-1} };
+function htmlTxt_txtArea_matching_bracket__GET_INDEX( 
+				t){ // textarea element
+	var tmpInitChar = t.value[ t.selectionStart ];
+	var tmpStruct = htmlTxt_txtArea_matching_bracket__BRACKETS[
+			tmpInitChar];
+	if(tmpStruct == null){ 
+		var tmpInitChar = t.value[ t.selectionStart -1 ];
+		var tmpStruct = htmlTxt_txtArea_matching_bracket__BRACKETS[
+			tmpInitChar];
+		if(tmpStruct == null){
+			return -1;} }
+	var tmpInverseChar = tmpStruct.char;
+	var tmpCharCount = 1; 
+	for(var i= t.selectionStart + tmpStruct.direction; 
+			i< t.value.length && i>-1; i+=tmpStruct.direction){
+		if(t.value[i] == tmpInverseChar){ tmpCharCount -=1;
+			if( tmpCharCount == 0){ return i;} }
+		if(t.value[i] == tmpInitChar){ tmpCharCount +=1; } }
+	return -1; }
+
+//OK, gotta do: jump to next word, jump to prev word
+// AND is there prev word/next word (case sensitve or not)
+
+///////////////////////////
+////////////// Grabbing actual text. 
+function htmTxt_txtArea_grab_curLine(t){ // textarea element
+        return t.value.substring(
+		htmTxt_txtArea_grab_curLine_INDEX_START(t), 
+		htmTxt_txtArea_grab_curLine_INDEX_END(t)).trim(); }
+function htmTxt_txtArea_grab_word_look_back(t){ // textarea element
+	return t.value.substring(
+		htmTxt_txtArea_grab_word_look_back_INDEX_START(t), 
+		t.selectionStart).trim();  }
+
+//////////////////////////////
+///////////////// Jumps textarea select 
+function htmTxt_txtArea_jump_to_index( t, getIndex ){ // t=textarea element
+	t.selectionStart = getIndex; t.selectionEnd = getIndex; }
+function htmTxt_txtArea_jump_to_prevLine(t ){ // t=textarea element
+	htmTxt_txtArea_jump_to_index( t,
+		htmTxt_txtArea_grab_curLine_INDEX_START(t) - 1); 
+	htmTxt_txtArea_jump_to_index( t,
+		htmTxt_txtArea_grab_curLine_INDEX_START(t)); }
+function htmTxt_txtArea_jump_to_nextLine(t ){ // t=textarea element
+	htmTxt_txtArea_jump_to_index( t,
+		htmTxt_txtArea_grab_curLine_INDEX_END(t) +1); 
+	htmTxt_txtArea_jump_to_index( t,
+		htmTxt_txtArea_grab_curLine_INDEX_START(t));  }
+function htmTxt_txtArea_jump_to_matching_bracket(t){ // t=textarea element
+	var tmp_i = t.selectionStart;
+	var getIndex =htmlTxt_txtArea_matching_bracket__GET_INDEX(t);
+	if(getIndex !=-1){ htmTxt_txtArea_jump_to_index(t, getIndex); 
+		if(tmp_i > t.selectionStart){t.selectionStart +=1;}}}
+/////////////////////////////
+//////////// Add/remove Line(s):
+function htmTxt_txtArea_replaceAll( t, getTxt){
+	t.setRangeText( getTxt, 0, t.value.length, 'select');              }
+function htmTxt_txtArea_add_txt_at_cursor(t,   //t=textarea element
+		getJumpToEndOfNewText_bool, getTxt){
+	t.setRangeText( getTxt, t.selectionStart, t.selectionStart ); 
+	if(getJumpToEndOfNewText_bool){ htmTxt_txtArea_jump_to_index(
+		t, t.selectionStart + getTxt.length ); } }
+
+function htmTxt_txtArea_add_lines_below(t, //t=textarea element
+		getJumpToEndOfNewText_bool, getTxt2add){
+	if(getTxt2add[0]!="\n"){ getTxt2add = "\n" + getTxt2add;}
+	var tmpEndLine =  htmTxt_txtArea_grab_curLine_INDEX_END(t);
+	t.setRangeText( getTxt2add, tmpEndLine, tmpEndLine );
+	if(getJumpToEndOfNewText_bool){
+		htmTxt_txtArea_jump_to_index(t, 
+			(tmpEndLine+1+ getTxt2add.length)); } }
+
+function htmTxt_txtArea_selected_get_numb_lines(t){
+	return t.value.slice( t.selectionStart, 
+		t.selectionStart - t.selectionEnd ).split("\n").length; }
+function htmTxt_txtArea_select_number_of_lines(t, getNumbLines){
+	t.selectionStart = htmTxt_txtArea_grab_curLine_INDEX_START(t);
+	t.selectionEnd = t.selectionStart;
+	for(var i=getNumbLines-1; i>0; i-=1){
+	   t.selectionEnd = htmTxt_txtArea_grab_curLine_INDEX_END(t)+1;} }
+function htmTxt_txtArea_selected_matching_bracket(t){
+	var tmp_start_i = t.selectionStart
+	var tmp_i = htmlTxt_txtArea_matching_bracket__GET_INDEX( t );
+	if(tmp_i == -1){return;}
+	var tmp_B = htmlTxt_txtArea_matching_bracket__BRACKETS;
+	if(tmp_start_i < tmp_i ){ tmp_i+=1; }
+	t.selectionEnd = tmp_i; }
+
+function htmTxt_txtArea_selected_get(t){
+	return t.value.slice( t.selectionStart, t.selectionEnd ); }
+function htmTxt_txtArea_selected_delete(t){
+	var tmpStart_i = t.selectionStart;
+	htmTxt_txtArea_replaceAll(t, t.value.slice( 0, t.selectionStart )+
+	  t.value.slice( t.selectionEnd, t.value.length-t.selectionEnd) );
+	t.selectionStart= tmpStart_i; }
+
+// REWRITE BELOW: have a 'select full selected lines' 
+//		BY WRITING 'select n number of lines'
+//		(so can '\n' count)
+function htmTxt_txtArea_get_selected_lines(t, tmpRemoveLinesOPTIONAL){
+	var tmpLineEnd_i = t.value.indexOf("\n",t.selectionEnd);
+	if( tmpLineEnd_i ==-1){ tmpLineEnd_i = t.value.length;}
+	var tmpLineStart_i = htmTxt_txtArea_grab_curLine_INDEX_START(t);
+
+	var tmpPreTxt = t.value.slice(0, tmpLineStart_i);
+	var tmpAfterTxt = t.value.slice(tmpLineEnd_i+1, t.value.length);
+
+	var tmpTxt = t.value.slice( tmpLineStart_i, tmpLineEnd_i );
+	
+	// gemini edited
+	if( tmpRemoveLinesOPTIONAL ){
+    	     // Better: only slice if there's a leading newline to remove
+    		htmTxt_txtArea_undo_redo__ADD(t);
+		let newText = tmpPreTxt + tmpAfterTxt; 
+    		if (tmpAfterTxt.startsWith('\n') && tmpPreTxt === "") {
+        		newText = tmpAfterTxt.slice(1);	}
+    		htmTxt_txtArea_replaceAll(t, newText);
+    		htmTxt_txtArea_jump_to_index(t, tmpLineStart_i); }
+	return tmpTxt;	
+}
+function htmTxt_txtArea_remove_selected_line(t){
+	return htmlTxt_txtArea_get_selected_lines(t, true); }
+/////////////////////////////////////
+/// :b:RUN/MAP ON SELECT LINES:b: 
+function htmTxt_txtArea_map_selected_lines(t, getMapFunction_or_globalName){
+	if(typeof getMapFunction_or_globalName=="string"){
+		getMapFunction_or_globalName = htmTxt_globalThis[
+			getMapFunction_or_globalName]; }
+	var tmpLines = htmTxt_txtArea_get_selected_lines(t, true)
+		.split("\n").map(getMapFunction_or_globalName).join("\n");
+	htmTxt_txtArea_add_txt_at_cursor(t, false, tmpLines);
+	t.selectionEnd = t.selectionStart + tmpLines.length; }
+
+////////////////////////////////////
+/// EVAL, eval has 2 tiers in case one breaks. (gemini made this one)
+////////////////////////////////////
+var htmTxt_globalThis = window; // Use window for clear global binding
+
+function htmTxt_power_eval(code) {
+    // TIER 1: The Classic (Indirect Eval for Global Scope)
+    try { 
+        var indirectEval = htmTxt_globalThis.eval;
+        return indirectEval(code);
+    } catch (e) {
+        if ( e.name === "SecurityError"){ //e instanceof SecurityError
+            console.warn("eval() blocked, trying Function constructor...");
+        } else { return "Eval Error: " + e.message; } }
+    // TIER 2: The Modern Standard (Global scope by default)
+    try { var runner = new Function(`return (${code})`);
+        return runner();
+    } catch (e) { 
+        try {return new Function(code)();
+        } catch (err) {  return "Function Error: " + err.message;} } }
+///////////////////////////////////////////////
+///////// :b: UNDO REDO :b:
+///////////////////////////////////////////////
+
+// Global Configuration
+var htmTxt_CMD_CHAR = ";"; 
+var htmTxt_INTERNAL_CHAR = ":";
+var htmTxt_cmd_last_keycode_down ="";
+var htmTxt_cmd_last_txtArea_value = "";
+
+var htmTxt_CURRENT_FILENAME_div = 
+	document.getElementById( "htmTxt_CURRENT_FILENAME_div");
+
+var htmTxt_undo_MAXLEN = 100;
+//textArea undo/redo (buildin breaks upon setting value)
+function htmTxt_txtArea_undo_redo__REDO( t){
+	if(t.htmTxt_redo == undefined || t.htmTxt_redo.length==0){ return;}
+	if(t.htmTxt_undo == undefined){ t.htmTxt_undo= [];}
+	t.htmTxt_undo.push( {txt:t.value, loc:t.selectionStart});
+	var tmpS = t.htmTxt_redo.pop();
+	htmTxt_txtArea_replaceAll(t, tmpS.txt);
+	htmTxt_txtArea_jump_to_index(t, tmpS.loc); }
+function htmTxt_txtArea_undo_redo__UNDO( t){
+	if(t.htmTxt_undo == undefined || t.htmTxt_undo.length==0){ return;}
+	if(t.htmTxt_redo == undefined){ t.htmTxt_redo= [];}
+	t.htmTxt_redo.push( {txt:t.value, loc:t.selectionStart});
+	var tmpS = t.htmTxt_undo.pop();
+	htmTxt_txtArea_replaceAll(t, tmpS.txt);
+	htmTxt_txtArea_jump_to_index(t, tmpS.loc);  }
+function htmTxt_txtArea_undo_redo__ADD( t){
+	if(t.htmTxt_undo == undefined){ t.htmTxt_undo = [];}
+	while(t.htmTxt_undo.length> htmTxt_undo_MAXLEN){
+		t.htmTxt_undo.shift(); } 
+	t.htmTxt_redo = undefined;
+	if( t.value != t.htmTxt_undo[ t.htmTxt_undo.length -1] ){
+	    t.htmTxt_undo.push( {txt:t.value, loc:t.selectionStart}); } }
+
+
+////////////////////////////
+// :b: Save/load from file :b: 
+///////////////////
+///////////// GEMINI made these next 2!
+
+async function htmTxt_load_file(getTypesOPTIONAL) { //'.txt,.js,.c,.h'
+	// RETURNS: { content:"", name:""}
+    return new Promise((resolve) => {
+        var input = document.createElement('input');
+        input.type = 'file'; 
+        input.accept = getTypesOPTIONAL ; 
+
+        input.onchange = e => {
+            var file = e.target.files[0];
+            if (!file) {
+                resolve(null); 
+                return; 
+            }
+            var reader = new FileReader();
+            reader.onload = event => { 
+                // Return an object with the name and the text content
+                resolve({
+                    name: file.name,
+                    content: event.target.result
+                }); 
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    });
+}
+
+async function htmTxt_save_file(fileName_OR_null, content) {
+    if(fileName_OR_null == null){ fileName_OR_null = "file.txt"; }
+    var blob = new Blob([content], { type: 'text/plain' });
+    var link = document.createElement('a');
+    link.download = fileName_OR_null;
+    var url = URL.createObjectURL(blob);
+    link.href = url;
+    link.click();
+    
+    // Memory cleanup: 10s delay to ensure the browser handshake finishes
+    setTimeout(() => URL.revokeObjectURL(url), 10000); 
+}
+
+////////////////////////////
+// Save/load to last select text area (requires button/txt area
+///////////////////
+//htmTxt_cmd_LAST_TEXTAREA_SELECTED
+
+// GEMINI rewrote this:
+// Global variable to track the "active" file name
+var htmTxt_CURRENT_FILENAME = "file.txt";
+
+async function htmTxt_load_to_last_sel_text_area_from_file() {
+    var fileData = await htmTxt_load_file(); 
+    if (fileData != null) {
+        htmTxt_CURRENT_FILENAME = fileData.name;
+        htmTxt_cmd_LAST_TEXTAREA_SELECTED.value = fileData.content;
+        console.log("Loaded: " + htmTxt_CURRENT_FILENAME); 
+	
+	htmTxt_open_files__new( htmTxt_CURRENT_FILENAME, 
+		fileData.content, true); //get_store_n_localStorage )
+	} }
+
+async function htmTxt_save_from_last_sel_text_area_from_file() {
+    htmTxt_save_file( htmTxt_CURRENT_FILENAME, 
+		htmTxt_cmd_LAST_TEXTAREA_SELECTED.value );  }
+//////////////////////////
+//////////////////////////
+////  :b: autocomp :b:
+//////////////////////////
+//htmTxt_cmd_LAST_TEXTAREA_SELECTED
+
+var htmTxt_AUTOCOMP_next_words = {};
+var htmTxt_AUTOCOMP_cur_words = {};
+
+var htmTxt_AUTOCOMP_char_sweep_width = 10000;
+var htmTxt_AUTOCOMP_char_sweep_overlap = 100;
+var htmTxt_AUTOCOMP_char_sweep_cur_i = 0;  
+var htmTxt_AUTOCOMP_NUMB_OUT_WRDS = 20;
+
+function htmTxt_AUTOCOMP_update_core_n_get_autocomp( t, //textarea
+		getWordFrament_OPTIONAL ){
+	// textarea
+	var tmpCurEnd = htmTxt_AUTOCOMP_char_sweep_cur_i
+			+ htmTxt_AUTOCOMP_char_sweep_width;
+	var tmpTxt = t.value.slice( htmTxt_AUTOCOMP_char_sweep_cur_i, 
+			tmpCurEnd);
+	htmTxt_AUTOCOMP_char_sweep_cur_i = tmpCurEnd - 
+		htmTxt_AUTOCOMP_char_sweep_overlap;	
+	//from GEMINI:
+	var tmpWords = tmpTxt.match(/\b[a-zA-Z_][a-zA-Z0-9_]{2,}\b/g);
+	if (tmpWords) {
+        for (var i = 0; i < tmpWords.length; i++) {
+            htmTxt_AUTOCOMP_next_words[tmpWords[i]] = 1; }	}
+	if( tmpCurEnd > t.value.length){
+		htmTxt_AUTOCOMP_char_sweep_cur_i = 0;
+		htmTxt_AUTOCOMP_cur_words = htmTxt_AUTOCOMP_next_words;
+		htmTxt_AUTOCOMP_next_words= {}; }
+
+	//returning words:
+	if(getWordFrament_OPTIONAL == null){ return null;}
+	var tmpKeys = Object.keys( htmTxt_AUTOCOMP_cur_words );
+	var tmpFound_words = [];
+	for(var i=0; i< tmpKeys.length && 
+	   tmpFound_words.length < htmTxt_AUTOCOMP_NUMB_OUT_WRDS; i+=1){
+		if( tmpKeys[i].indexOf( getWordFrament_OPTIONAL ) == 0){
+			tmpFound_words.push( tmpKeys[i]); }  }
+	
+	return tmpFound_words;
+}
+
+// Autocomp, returns a word:
+function htmTxt_AUTOCOMP_prompt_autcomp( t ){  //textArea
+	htmTxt_txtArea_undo_redo__ADD( t);
+	var tmp_i = htmTxt_txtArea_grab_word_look_back_INDEX_START(t);
+	var getWordFrament = t.value.slice( tmp_i, t.selectionStart );	
+
+	var tmpWords = htmTxt_AUTOCOMP_update_core_n_get_autocomp( 
+				t, getWordFrament ); 
+	var tmpOutDips = ""; var tmpChoices = "abcdefghijklmopqrstuv";
+	for(var i=0; i< tmpWords.length; i+=1){
+		tmpOutDips = tmpOutDips+ 
+			tmpChoices[i] + ": " + tmpWords[i] + " \n"; }
+
+	var tmpWord = tmpWords[ tmpChoices.indexOf( prompt( 
+				tmpOutDips ).trim() )  ];
+	if(tmpWord == null){ return getWordFrament; }
+	
+	t.value = t.value.slice(0,tmp_i) + tmpWord + 
+	    t.value.slice( tmp_i + getWordFrament.length, t.value.length);
+	htmTxt_txtArea_jump_to_index( t, tmp_i + tmpWord.length );
+}
+
+// searching for ":b"+":"  sections!
+function htmTxt_txtArea_b_tag_jump(t){ // t== textArea
+	var tmpFields= t.value.split(":b" + ":");
+	var tmpSectionTitles = []; 
+	for(var i=1; i< tmpFields.length; i+=2){
+		tmpSectionTitles.push(":b:"+tmpFields[i]+":b:" ); }
+	var tmpMenuOut= htmTxt_Prompt_Menu( tmpSectionTitles )
+	if(tmpMenuOut == null){ return; }
+	htmTxt_txtArea_jump_to_index( t, t.value.indexOf(tmpMenuOut) );
+}
+
+//////////////////////////
+//// :b: Auto-save file-list :b:
+//////////////////////////
+var _htmTxt_open_files = {};
+var _htmTxt_open_files__local_storage_var_name = "htmTxt_open_files";
+// data:{ name:"", text:"", selectionStart:0, store_n_localStorage:false}
+// --------- GOING TO USE 'prompt' for handling for now.
+// htmTxt_cmd_LAST_TEXTAREA_SELECTED
+
+var htmTxt_save_to_local_disp_div = 
+	document.getElementById( "htmTxt_save_to_local_disp_div");
+function htmTxt_open_files__toggle_save_too_local(){
+	var tmpF = _htmTxt_open_files[ 
+			htmTxt_CURRENT_FILENAME ];
+
+	if( tmpF.store_n_localStorage ){
+		tmpF.store_n_localStorage = false;
+	}else{ tmpF.store_n_localStorage = true; }
+
+	htmTxt_open_files_autosave__update( true, true );
+}
+
+
+var htmTxt_open_files_autosave__save_every_ticks = 100; 
+var htmTxt_open_files_autosave__cur_tick = 0;
+function htmTxt_open_files_autosave__update( //lazy fuction
+	getForceImmediate_autosave__OPTIONAL ){
+
+
+	htmTxt_CURRENT_FILENAME_div.innerHTML = 
+		htmTxt_CURRENT_FILENAME;
+	
+	 htmTxt_open_files__add_default_if_no_files();
+	var tmpF = _htmTxt_open_files[ 
+			htmTxt_CURRENT_FILENAME ];
+
+	if( tmpF.store_n_localStorage ){
+		htmTxt_save_to_local_disp_div.innerHTML = "ON:";
+	}else{ htmTxt_save_to_local_disp_div.innerHTML = "OFF:"; }
+
+	tmpF.selectionStart = 
+		htmTxt_cmd_LAST_TEXTAREA_SELECTED.selectionStart;
+	tmpF.text = htmTxt_cmd_LAST_TEXTAREA_SELECTED.value;
+
+	htmTxt_open_files_autosave__cur_tick +=1;
+	if(htmTxt_open_files_autosave__cur_tick < 
+	       htmTxt_open_files_autosave__save_every_ticks
+	   || getForceImmediate_autosave__OPTIONAL){
+		
+		htmTxt_open_files_autosave__cur_tick= 0;
+		var tmpOpenFiles =  {};
+		var tmpKeys = Object.keys( _htmTxt_open_files );
+		for(var i=0; i< tmpKeys.length; i+=1){
+			if( 1 == _htmTxt_open_files[ tmpKeys[i] ]
+				      .store_n_localStorage ){
+				tmpOpenFiles[ tmpKeys[i]] = 
+				     _htmTxt_open_files[ tmpKeys[i] ];} }
+		var tmpFileName_open_or_null = 
+			htmTxt_CURRENT_FILENAME;
+		if( tmpOpenFiles[ tmpFileName_open_or_null ] == null ){
+			tmpFileName_open_or_null = null; } 
+		localStorage.setItem(
+			_htmTxt_open_files__local_storage_var_name, 
+			JSON.stringify( {
+				open_filename:tmpFileName_open_or_null,
+				open_files:tmpOpenFiles,
+				clipboard_data: 
+				    htmTxt__copy_paste_tool_data }) );  
+		}
+}
+
+
+function htmTxt_open_files__load_on_startup(){
+	var tmpData = localStorage.getItem(
+			_htmTxt_open_files__local_storage_var_name);
+	if(tmpData == null || tmpData == ""){ return; }
+	tmpData = JSON.parse( tmpData);
+	
+
+	htmTxt__copy_paste_tool_data = tmpData.clipboard_data;
+	_htmTxt_open_files = tmpData.open_files;
+	htmTxt_open_files__add_default_if_no_files();	
+	htmTxt_open_files__open_one_already_open( tmpData.open_filename);
+	htmTxt_copy_paste_tool_update( true,
+		 htmTxt__copy_paste_tool_data[0] );
+	
+}
+
+//TODO: make a menu for open files
+//	-- bind the file to the 'Load from file' thing.
+//		-- DONE, just need a menu for 'new/load/rename'
+//		-- PROBABLY 2...
+//	htmTxt_CURRENT_FILENAME - already bound to  loaded file
+//TODO: file-menu/ file-dropbox/ file-name-display
+//
+
+function htmTxt_open_files__rename_open_file(){
+	var tmpName = prompt("Enter new name:");
+	if(tmpName == null || tmpName.trim() == ""){return;}
+	var tmpCurData = _htmTxt_open_files[
+		htmTxt_CURRENT_FILENAME ];
+	_htmTxt_open_files = _htmTxt_open_files.filter(
+	  function(a){	
+		if( a.name != htmTxt_CURRENT_FILENAME){
+				return 1;}} );
+
+	var tmpOut = htmTxt_open_files__new( tmpName, 
+			htmTxt_cmd_LAST_TEXTAREA_SELECTED.value, 
+			tmpCurData.store_n_localStorage );
+	tmpOut.selectionStart = tmpCurData.selectionStart
+	htmTxt_txtArea_jump_to_index( 
+	    htmTxt_cmd_LAST_TEXTAREA_SELECTED, tmpOut.selectionStart);
+}
+
+function htmTxt_open_files__open_one_already_open( 
+		getFileName_too_open__OPTIONAL){ //prompts if undefined
+	
+	if( getFileName_too_open__OPTIONAL != null){
+	   	var tmpFileName = getFileName_too_open__OPTIONAL;
+	}else{ 
+		var tmpFileName =  htmTxt_Prompt_Menu(
+				Object.keys( _htmTxt_open_files ) ); }
+	if( tmpFileName == null ){ return; }
+	var tmpFile = _htmTxt_open_files[ tmpFileName ];
+
+	htmTxt_CURRENT_FILENAME = tmpFile.name;
+	htmTxt_cmd_LAST_TEXTAREA_SELECTED.value = tmpFile.text; 
+	htmTxt_txtArea_jump_to_index( 
+	    htmTxt_cmd_LAST_TEXTAREA_SELECTED, tmpFile.selectionStart );
+}
+function htmTxt_open_files__new( getFileName, getFileText, 
+			get_store_n_localStorage ){ //DEFAULTS TO TRUE
+
+	if(  _htmTxt_open_files[ getFileName ] != undefined){
+		var tmpNewName=  prompt(getFileName + 
+			" already exists: replace it?\n(y/ OR new name)");
+		if(tmpNewName != null &&tmpNewName.trim() == "y"){ 
+			tmpNewName = getFileName; }
+	}else{ var tmpNewName = getFileName; }
+
+	if(get_store_n_localStorage == null){ 
+		get_store_n_localStorage = true; }
+	_htmTxt_open_files[ getFileName ] = { name : getFileName, 
+		text : getFileText,    selectionStart : 0, 
+		store_n_localStorage : get_store_n_localStorage };
+	htmTxt_open_files__open_one_already_open( getFileName );
+
+	return _htmTxt_open_files[ getFileName ];
+}
+
+function htmTxt_open_files__add_default_if_no_files(){
+	if( Object.keys( _htmTxt_open_files).length > 0){ return;}
+
+	htmTxt_open_files__new( "Default.txt", "", true );
+}
+
+function htmTxt_open_files_open_files__menu( 
+	getOpenSavedFiles_ONLY_OPTIONAL ){
+	
+	htmTxt_open_files_autosave__update( true );
+	var tmpMenuItems = ["NEW_FILE", "RENAME_FILE", "REMOVE_FILE",
+		"LOAD_FILE", "SAVE_CUR_FILE"];
+	if(getOpenSavedFiles_ONLY_OPTIONAL == true){ tmpMenuItems= [];}
+	var tmpMenuItems_with_open_files = tmpMenuItems.concat(
+		Object.values(_htmTxt_open_files)
+		.map( function(a){ return a.name; }));
+	var tmpResults = htmTxt_Prompt_Menu(
+				tmpMenuItems_with_open_files );
+	if(tmpResults == null){ return;}
+	if(tmpResults == "NEW_FILE"){
+		var tmpName = prompt("file name of NEW file:").trim();
+		if(tmpName == null || tmpName == ""){ return;}
+		htmTxt_open_files__new( tmpName, "", true);
+		htmTxt_open_files__open_one_already_open(tmpName ); 
+		htmTxt_open_files_autosave__update( true ); 
+		return; }
+	if(tmpResults == "RENAME_FILE"){
+		htmTxt_open_files__rename_open_file();
+		htmTxt_open_files__open_one_already_open(
+			   Object.keys( _htmTxt_open_files )[0] ); 
+		
+		htmTxt_open_files_autosave__update( true ); 
+		return; }
+	if(tmpResults == "REMOVE_FILE"){
+		var tmpConfirm = prompt(
+			"type 'd' to confirm DELETE file:");
+		if(tmpConfirm.trim() == "d"){
+			//delete/add default if empty
+			delete _htmTxt_open_files[
+				htmTxt_CURRENT_FILENAME];
+			htmTxt_open_files__add_default_if_no_files();
+			htmTxt_open_files__open_one_already_open(
+			   Object.keys( _htmTxt_open_files )[0] );  }
+		htmTxt_open_files_autosave__update( true );
+		return; }
+	if(tmpResults == "LOAD_FILE"){ 
+		htmTxt_load_to_last_sel_text_area_from_file();
+		htmTxt_open_files_autosave__update( true );
+		return; }
+	if(tmpResults == "SAVE_CUR_FILE"){  
+		htmTxt_save_from_last_sel_text_area_from_file();
+		htmTxt_open_files_autosave__update( true ); 
+		return; }
+	
+	htmTxt_open_files__open_one_already_open( tmpResults );
+	htmTxt_open_files_autosave__update( true );
+}
+
+
+//////////////////////////
+////// :b: EDIT_NON_EDIT MODES :b:
+//////////////////////////
+
+var htmTxt_cmd_IN_NON_EDIT_MODE = false;
+
+var htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row = -1;
+var htmTxt_cmd_NON_EDIT_MODE_caught_find = null;
+var htm_t = null; //becomes the text element before running js commands
+var htm_copy = htmTxt__copyText_to_clipboard; //requres txt
+var htm_get_paste = htmTxt__getPasteText_from_clipboard;
+var htmTxt_cmd_LAST_TEXTAREA_SELECTED = null //set at bottom of page!
+
+var htmTxt_button_line_numb_div = button_line_numb_div;
+var htmTxt_last_line_break_index = -1;
+
+var _htm_t_last_prompt = "";
+
+//returns an item in list, or null
+function htmTxt_Prompt_Menu( getChoiceList ){
+	var tmpDispText = ""; var tmpChoices_char ="abcdefghijklmopqrstuv";
+	for(var i=0; i< getChoiceList.length; i+=1){
+		tmpDispText = tmpDispText + tmpChoices_char[i].trim() + 
+			":" + getChoiceList[i] + "\n"}
+	var tmpGetPrompt = prompt("htmTxt_Prompt_Menu:\n"+ tmpDispText 
+				);
+	if(tmpGetPrompt==null || tmpGetPrompt.trim() == ""){return null;}
+	tmpGetPrompt = tmpGetPrompt.trim();
+	var tmp_i =tmpChoices_char.indexOf(tmpGetPrompt);
+	if(tmp_i == -1){ return null; } 
+	return getChoiceList[tmp_i];
+}
+function htmTxt_cmd_GO_TO_URL__ON_LINE_N_GOTO_NXT_LINE(){
+		var t = htmTxt_cmd_LAST_TEXTAREA_SELECTED;
+		var tmpLine = htmTxt_txtArea_grab_curLine(t).trim();
+		htmTxt_txtArea_jump_to_nextLine(t);
+		window.location.href = tmpLine; }
+//:b: NON_EDIT_MENU:b:
+async function htmTxt_cmd_NON_EDIT_MENU(e){
+	var t = e.target;
+	
+	//redo below
+	var tmpOptions = { };
+	tmpOptions[("Files_Open_Menu")] = function(){
+		htmTxt_open_files_open_files__menu(true); };
+	tmpOptions[("Files_Menu")] = 
+		htmTxt_open_files_open_files__menu;
+	tmpOptions[("Jump To :b"+": tag")] = htmTxt_txtArea_b_tag_jump;
+	tmpOptions[("Find_n_replace")] = 
+	function(){ htmTxt_txtArea_undo_redo__ADD(t);
+		var tmpFind = prompt(
+		"Find text (can select text before running this",
+		t.value.slice( t.selectionStart, t.selectionEnd ) );
+		if(tmpFind == null || tmpFind.trim()==""){return;}
+		var tmpReplace =prompt("Replace ::" + tmpFind+":: with");
+		if(tmpReplace==null || tmpReplace.trim()== ""){return;}
+		t.value = t.value.split( tmpFind).join(tmpReplace); };
+	tmpOptions[("GO_TO_LINE_AS_URL")] = 
+		htmTxt_cmd_GO_TO_URL__ON_LINE_N_GOTO_NXT_LINE;
+	tmpOptions[("GEN_URL_LIST_FROM_\n------URL_ON_LINE_N_A_LIST")] = 
+	  function(){
+		var tmpList = prompt("type/copy paste in a list"
+			+"\n comma separated EG:'a,b,c,d' (NO QUOTES)"
+			+"\nON LINE: a URL with REPLACE to be replaced"
+			+"\nBy items in list, 1 at a time:"
+			+"\n www.URL.com/REPLACE");
+		if(tmpList == null || tmpList.trim() == ""){ return;}
+		var t = htmTxt_cmd_LAST_TEXTAREA_SELECTED;
+		var tmpLine = htmTxt_txtArea_grab_curLine(t).trim();
+		tmpList = tmpList.split(",").map(function(a){
+		      return tmpLine.split("REPLACE").join(a.trim());});
+		htmTxt_txtArea_add_lines_below(t, 
+			false, tmpList.join("\n"));
+		htmTxt_txtArea_add_lines_below(t, 
+			false, "---------");
+		htmTxt_txtArea_jump_to_nextLine(t); };
+	tmpOptions[("Reset_page_to_default")] = 
+	function(){
+	   if("yes"!=prompt("confirm reset (type'yes')").trim()){
+		 return;}
+	   localStorage.removeItem(
+			_htmTxt_open_files__local_storage_var_name );
+	   window.location.reload();
+	}; 
+
+	var tmpMenu_out = htmTxt_Prompt_Menu( Object.keys(tmpOptions) );
+	if(tmpMenu_out == null){ return;}
+
+	tmpOptions[tmpMenu_out]( t);
+}
+
+async function htmTxt_cmd_NON_EDIT_MODE (e){
+	var t = e.target;
+        if (!t) return 0;
+
+
+
+	//////////////////////////////////////////////	
+   	//DF- to turn to htmTxt_cmd_IN_NON_EDIT_MODE
+   	////////////////
+   	if(htmTxt_cmd_last_keycode_down == 68){//d
+	    if( e.keyCode == 70){ htmTxt_cmd_last_keycode_down = ""; //f
+		htmTxt_cmd_NON_EDIT_MENU(e);
+		return e.preventDefault(); }  }   
+   	if(htmTxt_cmd_last_keycode_down == 70){//f
+	   if( e.keyCode == 68){  htmTxt_cmd_last_keycode_down = "";  //d
+		htmTxt_cmd_NON_EDIT_MENU(e);
+		return e.preventDefault(); }  }
+
+
+	if(e.keyCode == 75){ // 'k'
+		if(htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row ==-1){
+		   htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row = 
+			t.selectionStart -
+			htmTxt_txtArea_grab_curLine_INDEX_START(t); }
+		if(htmTxt_txtArea_grab_curLine_INDEX_START(t) ==0){
+			htmTxt_txtArea_jump_to_index( t,
+			  htmTxt_txtArea_grab_curLine_INDEX_START(t)); }
+		htmTxt_txtArea_jump_to_index( t,
+			htmTxt_txtArea_grab_curLine_INDEX_START(t)-1);
+		htmTxt_txtArea_jump_to_index(t,
+			 htmTxt_txtArea_grab_curLine_INDEX_END(t));
+		if(t.selectionStart > 
+			htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row + 
+			   htmTxt_txtArea_grab_curLine_INDEX_START(t)){
+		    htmTxt_txtArea_jump_to_index( t,
+			htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row + 
+			htmTxt_txtArea_grab_curLine_INDEX_START(t));}
+		return e.preventDefault();  }
+	if(e.keyCode == 74){ // 'j'
+		if(htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row ==-1){
+		   htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row = 
+			t.selectionStart -
+			htmTxt_txtArea_grab_curLine_INDEX_START(t); }
+		htmTxt_txtArea_jump_to_index( t,
+			htmTxt_txtArea_grab_curLine_INDEX_END(t) + 1);
+		htmTxt_txtArea_jump_to_index(t,
+			 htmTxt_txtArea_grab_curLine_INDEX_END(t));
+		if(t.selectionStart > 
+			htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row + 
+			   htmTxt_txtArea_grab_curLine_INDEX_START(t)){
+		    htmTxt_txtArea_jump_to_index( t,
+			htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row + 
+			htmTxt_txtArea_grab_curLine_INDEX_START(t));}
+		return e.preventDefault(); }
+	htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row = -1;
+	if(e.keyCode == 72){ // 'h'
+		htmTxt_txtArea_jump_to_index( t, t.selectionStart-1);
+		return e.preventDefault();  }
+	if(e.keyCode == 76){ // 'l'
+		htmTxt_txtArea_jump_to_index( t, t.selectionStart+1);
+		return e.preventDefault(); }
+	if(e.keyCode == 52){ // '$'
+		htmTxt_txtArea_jump_to_index( t, 
+			htmTxt_txtArea_grab_curLine_INDEX_END(t));
+		return e.preventDefault(); }
+	if(e.keyCode == 54){ // '^'
+		htmTxt_txtArea_jump_to_index( t, 
+			htmTxt_txtArea_grab_curLine_INDEX_START(t));
+		return e.preventDefault(); }
+	if(e.keyCode == 87){ // 'w'
+		htmTxt_txtArea_select_word(t);
+		htmTxt_txtArea_jump_to_index( t, t.selectionEnd+1);
+		htmTxt_txtArea_select_word(t);
+		return e.preventDefault(); }
+	if(e.keyCode == 66){ // 'b'
+		htmTxt_txtArea_jump_to_index( t, t.selectionStart-2);
+		htmTxt_txtArea_select_word(t);
+		return e.preventDefault(); }
+
+	if(e.keyCode==17){ // 'ctrl', exit mode!
+		htmTxt_cmd_IN_NON_EDIT_MODE = false; return;}
+	if(e.keyCode == 73){ // 'i' key
+		htmTxt_cmd_IN_NON_EDIT_MODE = false; }
+	if(e.keyCode == 65){ // 'a' key
+		t.selectionStart +=1; t.selectionEnd +=1; htmTxt_cmd_IN_NON_EDIT_MODE = false; }
+	if(e.keyCode == 80){ // 'p'
+		htmTxt_txtArea_add_lines_below(t, //t=textarea element
+		  false,//getJumpToEndOfNewText_bool, 
+		  htmTxt__copy_paste_tool_data[0]);
+		htmTxt_txtArea_undo_redo__ADD( t);
+		 htmTxt_txtArea_update_line_numb(t);
+		e.preventDefault();
+		return;  }
+	
+	if(e.keyCode == 53){ // '%'
+		htmTxt_txtArea_jump_to_matching_bracket(t); 
+		e.preventDefault();
+		return; }
+	
+	if(e.keyCode == 51){ // '3/#' -  for word jumping
+		var tmpWord = htmTxt_txtArea_select_word(t);
+		htmTxt_cmd_NON_EDIT_MODE_caught_find = tmpWord; }
+	if(e.keyCode == 191){ // '/' -  for find
+		var tmpWord = prompt("What do you want to find?");
+		if(tmpWord !=null){ 
+			htmTxt_cmd_NON_EDIT_MODE_caught_find = tmpWord;} }
+	if(e.keyCode == 78 || e.keyCode == 191 || e.keyCode == 51
+			){ // 'n/#//' -  for autocomp
+		var tmpWord = htmTxt_cmd_NON_EDIT_MODE_caught_find;
+		var tmpDirIndexOf = "lastIndexOf"; var tmpInitOffset = -1;
+		if( e.shiftKey){ var tmpDirIndexOf = "indexOf"; 
+				var tmpInitOffset = 1; }
+		if(t.selectionStart ==0){
+			t.selectionStart = t.value.length;} 
+		var tmp_i = t.value[ tmpDirIndexOf ](
+			tmpWord, t.selectionStart + tmpInitOffset);
+		if( tmp_i == -1){ var tmp_i = 
+			t.value[ tmpDirIndexOf ](tmpWord, t.value.length);}
+		if(tmp_i != -1){
+			t.selectionStart = tmp_i; 
+			t.selectionEnd = tmp_i+ tmpWord.length; }
+		return e.preventDefault();
+	}
+	
+	if(e.keyCode == 59){ // :
+		htm_t = t;
+		_htm_t_last_prompt =  prompt("RUN JS COMMAND: \n htm_t is text area,\n so htm_t.value is text area text \n (start lines with ';' too run on page) htm_get_paste() and htm_copy(txt) for clipboard, \n (//START//...//END//, for start/end multiline in-line-js)", _htm_t_last_prompt);
+		var tmpP =htmTxt_power_eval( _htm_t_last_prompt ); 
+		prompt( tmpP, tmpP);
+	}
+
+	if(e.keyCode == 89 && htmTxt_cmd_last_keycode_down == 89){ 
+						// 'y'+ shift
+		var tmpTxt = htmTxt_txtArea_get_selected_lines(
+			t, false); //tmpRemoveLinesOPTIONAL)
+		await htmTxt__copyText_to_clipboard(tmpTxt);
+		await htmTxt_copy_paste_tool_update(true,
+			tmpTxt );
+		e.preventDefault();
+		return;
+	}
+	//gemini rewrote next 2 blocks
+	// Inside the 'y' (Yank) block:
+	if(e.keyCode == 89 && htmTxt_cmd_last_keycode_down == 89){ //'y'
+	    var tmpTxt = htmTxt_txtArea_get_selected_lines(t, false);
+	    await htmTxt__copyText_to_clipboard(tmpTxt);
+	    await htmTxt_copy_paste_tool_update(true, tmpTxt);
+	    e.preventDefault();
+	    return;
+	}
+	// Inside the 'd' (Delete) block:
+	if(e.keyCode == 68 && htmTxt_cmd_last_keycode_down == 68){ //'d'
+	    htmTxt_txtArea_undo_redo__ADD(t); 
+	    
+	    var tmpTxt = htmTxt_txtArea_get_selected_lines(t, true); 
+	    await htmTxt__copyText_to_clipboard(tmpTxt);
+	    htmTxt_copy_paste_tool_update(true, tmpTxt);
+	    e.preventDefault();
+	    htmTxt_txtArea_update_line_numb(t);
+	    return;
+	}
+	
+	if(e.keyCode == 71){ // 'g'
+		if( e.shiftKey ){ 
+			htmTxt_txtArea_jump_to_index(t, t.value.length);
+			htmTxt_txtArea_jump_to_prevLine(t);
+			htmTxt_txtArea_jump_to_nextLine(t);
+		}else{ var tmpNumb = prompt(
+				"jump to line number or 'g'").trim();
+			if(tmpNumb == 'g'){ tmpNumb = '0';
+			}if(tmpNumb!="" && isNaN(tmpNumb) != true){
+			   tmpNumb = parseInt( tmpNumb);
+			   var tmpLines = t.value.split("\n");
+			   var tmpCharCount = 0;
+			   htmTxt_txtArea_jump_to_index( t, 0);
+			   while(tmpNumb>0){ tmpNumb-=1;
+			     if(tmpLines.length >0){
+			     htmTxt_txtArea_jump_to_nextLine(t);}}
+		}	}
+		return e.preventDefault(); }
+
+
+        // htmTxt_Autocomplete_Trigger(t);
+    
+
+	if(e.key.length == 1 || e.key== "Space"|| e.key== "Tab" ){  
+		e.preventDefault(); } 
+	
+	htmTxt_cmd_last_txtArea_value = t.value;
+    	htmTxt_cmd_last_keycode_down = e.keyCode;	
+	return;
+}
+
+//ZZZ
+//  OK, can do full 'edit mode' easily
+// --- have 
+
+
+htmTxt_settup_main_textareas_cmdKey_valueFunct['onfocus'] = async function(e){ htmTxt_cmd_LAST_TEXTAREA_SELECTED = e.target;  }
+
+var htmTxt_last_line_break_disp_div = 
+	document.getElementById("htmTxt_last_line_break_disp_div");
+var htmTxt_last_line_break_disp2_div = 
+	document.getElementById("htmTxt_last_line_break_disp2_div");
+
+//Gemini edited
+function htmTxt_txtArea_update_line_numb(t) {
+    // Current "Line Start" position
+    var tmpLastLineBreak_i = t.value.lastIndexOf("\n", t.selectionStart - 1);
+
+    // If the cursor is on a different line than the last check
+    if (htmTxt_last_line_break_index !== tmpLastLineBreak_i) {
+        var textUpToCursor = t.value.substring(0, t.selectionStart);
+        var tmpLineCount = (textUpToCursor.match(/\n/g) || []).length + 1;
+        
+        button_line_numb_div.innerHTML = "L:" + tmpLineCount;
+	htmTxt_last_line_break_disp_div.innerHTML = "L:" + tmpLineCount;
+	htmTxt_last_line_break_disp2_div.innerHTML = "L:" + tmpLineCount;
+        htmTxt_last_line_break_index = tmpLastLineBreak_i;
+    }
+}
+htmTxt_settup_main_textareas_cmdKey_valueFunct['onkeyup'] = async function(e){
+	var t = e.target;
+	htmTxt_txtArea_update_line_numb(t); 
+}
+htmTxt_settup_main_textareas_cmdKey_valueFunct['onclick'] = async function(e){
+	var t = e.target;
+	htmTxt_txtArea_update_line_numb(t);
+}
+
+// :b: edit mode :b:
+
+var htmTxt_cmd_doing_ctrl_o_tab_o_esc_opt = false;
+var htmTxt_cmd_last_undo_i = -1;
+// paste below commented area to console to get keys pressed. 
+//document.body.onkeydown= function(e){ console.log(e.keyCode + " " + e.key);  } 
+htmTxt_settup_main_textareas_cmdKey_valueFunct['onkeydown'] = async function(e) {
+    var t = e.target;
+
+    htmTxt_txtArea_update_line_numb(t);
+
+   if(htmTxt__copy_paste_tool_data.length == 0){
+	htmTxt__copy_paste_tool_data.push("---PASTE BUFFER NOT SYNCED WITH SYSTEM PASTE BUFFER: TRY CTRL+V then CTRL+Z- TO SYNC!--"); }
+   
+   if(htmTxt_cmd_IN_NON_EDIT_MODE){  htmTxt_cmd_NON_EDIT_MODE(e); return;}
+
+   //updating autocomplete
+   htmTxt_AUTOCOMP_update_core_n_get_autocomp( t );
+
+   if(e.keyCode == 90 && htmTxt_cmd_ctrl_keydown){ // 'z'
+		htmTxt_txtArea_undo_redo__UNDO( t);
+		return e.preventDefault(); }
+    if(e.keyCode == 89 && htmTxt_cmd_ctrl_keydown){ // 'y'
+		htmTxt_txtArea_undo_redo__REDO( t);
+		return e.preventDefault(); }
+    if(e.keyCode == 86 && htmTxt_cmd_ctrl_keydown){ // 'v'
+		htmTxt_txtArea_undo_redo__ADD( t);}
+
+    // BELOW ctrl+'n' IS ctrl+shift+n: browsers block ctrl +n
+    if(e.keyCode == 78 && htmTxt_cmd_ctrl_keydown){ // 'n' 
+	   htmTxt_AUTOCOMP_prompt_autcomp( t );
+	  
+	  return e.preventDefault(); }
+	
+    if(e.keyCode == 17){ // 'cntrl' key
+		htmTxt_cmd_ctrl_keydown = true; 
+    }else{ if(!e.shiftKey){  htmTxt_cmd_ctrl_keydown = false; } }
+
+    //entering 'NON_EDIT' mode
+    if( e.keyCode == 27 ){  
+		htmTxt_cmd_IN_NON_EDIT_MODE = true;
+		e.preventDefault(); 
+		return;
+    }
+   
+   if(e.keyCode == 8 || e.keyCode == 46 || //'backspace'/'del'
+	   e.key.length ==1 ){ 
+	if( t.selectionStart != t.selectionEnd){
+		htmTxt_txtArea_undo_redo__ADD( t); 
+		htmTxt_copy_paste_tool_update(true,
+		   t.value.slice(t.selectionStart, t.selectionEnd)); } }
+
+   //////////////////////////////////////////////	
+   //JK- to turn to htmTxt_cmd_IN_NON_EDIT_MODE
+   ////////////////
+   if(htmTxt_cmd_last_keycode_down == 74){//j
+	if( e.keyCode == 75){ htmTxt_cmd_last_keycode_down = ""; //k
+		var tmp_i = t.selectionStart -1;
+		t.value = htmTxt_cmd_last_txtArea_value;
+		htmTxt_txtArea_jump_to_index(  t, tmp_i); 
+		htmTxt_cmd_IN_NON_EDIT_MODE = true;
+		return e.preventDefault(); }  }   
+   if(htmTxt_cmd_last_keycode_down == 75){//k
+	if( e.keyCode == 74){  htmTxt_cmd_last_keycode_down = "";  //j
+		var tmp_i = t.selectionStart -1;
+		t.value = htmTxt_cmd_last_txtArea_value;
+		htmTxt_txtArea_jump_to_index(  t, tmp_i); 
+		htmTxt_cmd_IN_NON_EDIT_MODE = true;
+		return e.preventDefault(); }  }
+
+	// MUST be below the JK test above
+    htmTxt_cmd_last_txtArea_value = t.value;
+    htmTxt_cmd_last_keycode_down = e.keyCode;	
+   ///////////////////////////////////
+   ///////////////////////////////////
+   ///////////////////////////////////
+	
+	
+   if (e.key == "Tab") { 
+		e.preventDefault();
+		// if lines selected- indent all lines, de-indent if 'shift'
+		if( t.selectionStart != t.selectionEnd){
+			if(e.shiftKey == false){ 
+		    	  htmTxt_txtArea_map_selected_lines(t, 
+			    function(getLine){ return "\t"+ getLine; });
+			}else{ htmTxt_txtArea_map_selected_lines(t, 
+			  function(getLine){  
+			    if(getLine[0]=="\t" ||getLine[0]==" "){
+			      getLine = getLine.slice(1, getLine.length);}
+			      return  getLine; }); }
+		return; } 
+		  htmTxt_txtArea_add_txt_at_cursor(t,   //t=textarea element
+		  true, "\t"); //getJumpToEndOfNewText_bool, getTxt
+	}
+
+    // INTERCEPT ENTER KEY
+    if (e.keyCode == 13 && !e.shiftKey) { // ENTER
+	htmTxt_txtArea_undo_redo__ADD( t);
+	
+	
+        // 2. MSX-Style JS Execution (;)
+	var tmpCurLine = htmTxt_txtArea_grab_curLine(t);
+        if(tmpCurLine.trim() == "//END//"){
+	    var tmp_cur_cmd = (t.value.slice(0,
+			htmTxt_txtArea_grab_curLine_INDEX_END(t)) + "  ")
+			.split("//START//").join("//END//")
+			.split("//END//");
+	    if(tmp_cur_cmd.length >=3 && (tmp_cur_cmd.length-1) %2 == 0 ){
+		e.preventDefault();
+		htm_t = t;
+		try {   // Execute and append result on new line
+			var tmp_cur_entry= 
+				tmp_cur_cmd.reverse()[1];
+			htmTxt_txtArea_add_lines_below( t, true,
+			"\n// " + htmTxt_power_eval(tmp_cur_entry) );
+            	} catch (err) {
+			htmTxt_txtArea_add_lines_below(t, false, 
+				"\n!! " + err.message );
+        }	} }
+	if (tmpCurLine.startsWith(htmTxt_CMD_CHAR)) {
+	    htm_t = t;
+            e.preventDefault(); // Stop the default newline for a moment;
+            try {   // Execute and append result on new line
+		htmTxt_txtArea_add_lines_below( t, true,
+			"\n// " + htmTxt_power_eval(tmpCurLine) );
+            } catch (err) {
+		htmTxt_txtArea_add_lines_below(t, false, 
+			"\n!! " + err.message );
+            }
+            return;
+        }
+    } 
+};
+
+///////////////////////////////////
+// :b: DRAG AND DROP FILES LOADING :b:
+//////////////////////////
+
+//Gemini made this:
+// TO 'dragover' disable is NEEDED for drops!!!
+htmTxt_settup_main_textareas_cmdKey_valueFunct['dragover'] = 
+async function(e){ e.preventDefault(); }
+htmTxt_settup_main_textareas_cmdKey_valueFunct['drop'] = 
+async function(e) {
+    e.preventDefault();
+    var files = e.dataTransfer.files;
+    if (files.length === 0) return;
+    for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        var name = file.name;
+        
+        // Modern way to get text content
+        var content = await file.text();
+        console.log("Loading file: " + name);
+	htmTxt_open_files__new( file.name, content, true);
+	htmTxt_open_files_autosave__update(true);
+    }
+};
+///////////////////////////////
+// warning before leaving and setting up vars. 
+////////////////////////////////////
+
+window.addEventListener('beforeunload', (event) => {
+    // Modern browsers require preventDefault() and setting returnValue
+    htmTxt_open_files_autosave__update( true );
+    //event.preventDefault();
+    //event.returnValue = ''; // This triggers the browser's default dialog
+});
+
+////////////////////////////////////
+// :b: setting up main text area:b:
+////////////////////////////////
+var htmTxt_Main_textarea_div = 
+	document.getElementById("htmTxt_Main_textarea_div");
+htmTxt_settup_main_textareas(htmTxt_Main_textarea_div);
+htmTxt_cmd_LAST_TEXTAREA_SELECTED = htmTxt_Main_textarea_div;
+
+// loading local-storage saved files
+htmTxt_open_files__load_on_startup();
+htmTxt_open_files_autosave__update( true);
+htmTxt_Main_textarea_div.focus();
+
+</script>
+
+</body>
+</html>
+
