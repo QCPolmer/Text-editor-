@@ -19,4 +19,7 @@ is pressed on the //END// line.
 
 (jk-> enters normal mode, 
 df in normal mode for menu)
+
+AI (gemini) helped with some of the low-
+level stuff.
 https://qcpolmer.github.io/Text-editor-/
