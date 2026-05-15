@@ -1,9 +1,8 @@
 // WARNING: this is considered alpha,
 // and no promises on updates
 // (mostly as a 'backup')
-// ALSO, avoid on mobile, 
-//  the key-handling on mobile is broken 
-// AS IN: mobile system don't do that well 
+// ALSO, for mobile, in NORMAL mode,
+//   use one screen buttons. 
 
 OK, the idea is to get a bunch of vim 
 features (from my custom vimrc) as 
