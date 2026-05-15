@@ -352,8 +352,12 @@ function htmTxt_txtArea_grab_word_look_back(t){ // textarea element
 
 //////////////////////////////
 ///////////////// Jumps textarea select 
-function htmTxt_txtArea_jump_to_index( t, getIndex ){ // t=textarea element
-	t.selectionStart = getIndex; t.selectionEnd = getIndex; }
+//grok rewrote
+function htmTxt_txtArea_jump_to_index(t, getIndex) {
+    if (!t) return;
+    const safeIndex = Math.max(0, Math.min(t.value.length, getIndex || 0));
+    t.selectionStart = safeIndex;
+    t.selectionEnd = safeIndex;}
 function htmTxt_txtArea_jump_to_prevLine(t ){ // t=textarea element
 	htmTxt_txtArea_jump_to_index( t,
 		htmTxt_txtArea_grab_curLine_INDEX_START(t) - 1); 
