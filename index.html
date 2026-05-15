@@ -157,7 +157,7 @@ COPY_PASTE BUFFER:<br>
     <button onclick="htmTxt_simulateKey(73)">-i</button>
     <button onclick="htmTxt_simulateKey(89)">-y</button>
     <button onclick="htmTxt_simulateKey(80)">-p</button>
-    <button onclick="htmTxt_simulateKey(58)">-:</button>
+    <button onclick="htmTxt_simulateKey(59)">-:</button>
 	
     <button onclick="htmTxt_simulateKey(72)">-h</button>
     <button onclick="htmTxt_simulateKey(74)">-j</button>
@@ -1304,11 +1304,12 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 		return e.preventDefault();
 	}
 	
-	if(e.keyCode == 59){ // :
-		htm_t = t;
-		_htm_t_last_prompt =  prompt("RUN JS COMMAND: \n htm_t is text area,\n so htm_t.value is text area text \n (start lines with ';' too run on page) htm_get_paste() and htm_copy(txt) for clipboard, \n (//START//...//END//, for start/end multiline in-line-js)", _htm_t_last_prompt);
-		var tmpP =htmTxt_power_eval( _htm_t_last_prompt ); 
-		prompt( tmpP, tmpP);
+	// Support both ; and : (colon = shift + ;)
+	if(e.keyCode == 59){ 
+    		htm_t = t;
+    		_htm_t_last_prompt = prompt("RUN JS COMMAND: ...", _htm_t_last_prompt);
+    		var tmpP = htmTxt_power_eval(_htm_t_last_prompt);
+    		prompt(tmpP, tmpP);
 	}
 
 	//gemini rewrote next 2 blocks
@@ -1423,26 +1424,28 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['oninput'] = async function(e) {
     
    
     // --- 1. NON-EDIT MODE COMMAND CATCHER ---
-    if (htmTxt_cmd_IN_NON_EDIT_MODE && 
-	(e.key.length > 1 && e.key != "Escape" && e.key != "Enter")) {
-	
-        // Find the character the mobile keyboard just forced in
-        var typedChar = t.value.slice(t.selectionStart - 1, t.selectionStart).toLowerCase();
+    if (htmTxt_cmd_IN_NON_EDIT_MODE) {
         
-        // ROLLBACK: Erase the character immediately so it doesn't mess up the file
+        // Safely extract the character
+        var typedChar = "";
+        if (e.data != null) { typedChar = e.data.toLowerCase(); }
+        else { typedChar = t.value.slice(t.selectionStart - 1, t.selectionStart).toLowerCase(); }
+        
+        // ROLLBACK: Erase the character immediately
         t.value = htmTxt_cmd_last_txtArea_value;
+        t.setSelectionRange(t.selectionStart, t.selectionStart, "none");
         
-        // Build a "Fake Event" to feed your existing logic
-        if (typedChar) {
+        // If it's a valid single character, route it to the engine!
+        if (typedChar && typedChar.length === 1) {
             var fakeEvent = {
                 target: t,
                 key: typedChar,
-                keyCode: typedChar.toUpperCase().charCodeAt(0), // Maps 'd' to 68, 'j' to 74
-                shiftKey: false, // Can't easily detect mobile shift here, but covers base commands
+                keyCode: typedChar.toUpperCase().charCodeAt(0), 
+                shiftKey: false, 
                 preventDefault: function(){}
             };
-            // Route it to your engine!
             htmTxt_cmd_NON_EDIT_MODE(fakeEvent);
+            htmTxt_cmd_last_txtArea_value = t.value;
         }
         return;
     }
@@ -1693,19 +1696,16 @@ function htmTxt_update_mode_bar() {
 function htmTxt_simulateKey(keyCode, shiftKey = false) {
     const t = htmTxt_cmd_LAST_TEXTAREA_SELECTED;
     if (!t) return;
-
     t.focus();
 
     const fakeEvent = {
         target: t,
         keyCode: keyCode,
+        key: String.fromCharCode(keyCode).toLowerCase(), // Helps with modern e.key checks
         shiftKey: shiftKey,
         preventDefault: function(){},
         stopImmediatePropagation: function(){}
     };
-
-    // Important: Update last keycode so combos (dd, yy, etc.) still work
-    htmTxt_cmd_last_keycode_down = keyCode;
 
     // Fire through your existing handler
     if (typeof htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'] === 'function') {
