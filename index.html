@@ -1358,41 +1358,46 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['oninput'] = function(e) {
 
     // ------------------- NON-EDIT MODE -------------------
     if (htmTxt_cmd_IN_NON_EDIT_MODE) {
-	    var typedChar = t.value.slice(t.selectionStart - 1, t.selectionStart).toLowerCase();
-	    
-	    // 1. FREEZE scroll
-	    var savedScroll = t.scrollTop;
-	    
-	    // 2. ROLLBACK text
-	    t.value = htmTxt_cmd_last_txtArea_value; 
-	    
-	    // 3. RESTORE scroll immediately so the screen doesn't flinch
-	    t.scrollTop = savedScroll;
-	    
-	    if (typedChar === 'h' || typedChar === 'l' || typedChar === 'j' || typedChar === 'k') {
-		var fakeEvent = {
-		    target: t,
-		    key: typedChar,
-		    keyCode: typedChar.toUpperCase().charCodeAt(0),
-		    preventDefault: function(){}
-		};
-		htmTxt_cmd_NON_EDIT_MODE(fakeEvent);
-		htmTxt_cmd_last_txtArea_value = t.value; 
-		return;
-	    }
-	}
+        const inserted = t.value.slice(Math.max(0, t.selectionStart - 1), t.selectionStart);
+        
+        // Rollback
+        t.value = htmTxt_cmd_last_txtArea_value;
+        
+        // Critical: Use RAF + setSelectionRange("none")
+        requestAnimationFrame(() => {
+            const targetPos = Math.max(0, t.selectionStart - 1);  // ghost char offset fix
+            t.setSelectionRange(targetPos, targetPos, "none");
+            t.focus();
+        });
 
-    // ------------------- NORMAL EDIT MODE -------------------
+        if (inserted && inserted.length > 0) {
+            const fakeEvent = {
+                target: t,
+                key: inserted,
+                keyCode: inserted.toUpperCase().charCodeAt(0) || inserted.charCodeAt(0) || 0,
+                shiftKey: false,
+                preventDefault: () => {}
+            };
+            // Small delay before command processing
+            setTimeout(() => htmTxt_cmd_NON_EDIT_MODE(fakeEvent), 10);
+        }
+        return;
+    }
+
+    // ------------------- NORMAL EDIT MODE (JK escape) -------------------
     const curPos = t.selectionStart || 0;
     const lastTwo = t.value.slice(Math.max(0, curPos - 2), curPos).toLowerCase();
 
     if (lastTwo === "jk" || lastTwo === "kj") {
         t.value = t.value.slice(0, curPos - 2) + t.value.slice(curPos);
-        htmTxt_txtArea_jump_to_index(t, curPos - 2);
+        
+        requestAnimationFrame(() => {
+            htmTxt_txtArea_jump_to_index(t, curPos - 2);
+            t.focus();
+        });
         
         htmTxt_cmd_IN_NON_EDIT_MODE = true;
         htmTxt_cmd_last_txtArea_value = t.value;
-        t.focus();
         return;
     }
 
