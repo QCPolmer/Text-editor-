@@ -157,7 +157,7 @@ COPY_PASTE BUFFER:<br>
     <button onclick="htmTxt_simulateKey(73)">-i</button>
     <button onclick="htmTxt_simulateKey(89)">-y</button>
     <button onclick="htmTxt_simulateKey(80)">-p</button>
-    <button onclick="htmTxt_simulateKey(68)">-d</button>
+    <button onclick="htmTxt_simulateKey(58)">-:</button>
 	
     <button onclick="htmTxt_simulateKey(72)">-h</button>
     <button onclick="htmTxt_simulateKey(74)">-j</button>
@@ -168,9 +168,10 @@ COPY_PASTE BUFFER:<br>
  <br>
     <!-- Row 2: Actions -->
      <div style="display:flex; justify-content:center; gap:0px; flex-wrap:wrap;">
+    <button onclick="htmTxt_simulateKey(68)">-d</button>
+    <button onclick="htmTxt_simulateKey(70)">-f</button>
     <button onclick="htmTxt_simulateKey(51)">-#</button>
     <button onclick="htmTxt_simulateKey(53)">-%</button>
-    <button onclick="htmTxt_simulateKey(58)">-:</button>
     <button onclick="htmTxt_simulateKey(52)">-$</button>
     <button onclick="htmTxt_simulateKey(71)">-g</button>
     <button onclick="htmTxt_simulateKey(78)">-n</button>
@@ -1687,7 +1688,8 @@ function htmTxt_update_mode_bar() {
     if (carousel) carousel.style.display = htmTxt_cmd_IN_NON_EDIT_MODE ? "none" : "flex";
 }
 
-// Simulate keypress ? feeds your existing keydown logic
+// Grok made this: 
+// Simulate keypress - feeds your existing keydown logic
 function htmTxt_simulateKey(keyCode, shiftKey = false) {
     const t = htmTxt_cmd_LAST_TEXTAREA_SELECTED;
     if (!t) return;
@@ -1702,14 +1704,16 @@ function htmTxt_simulateKey(keyCode, shiftKey = false) {
         stopImmediatePropagation: function(){}
     };
 
-    // Fire it through your existing handler
+    // Important: Update last keycode so combos (dd, yy, etc.) still work
+    htmTxt_cmd_last_keycode_down = keyCode;
+
+    // Fire through your existing handler
     if (typeof htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'] === 'function') {
         htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'](fakeEvent);
     } else if (t.onkeydown) {
         t.onkeydown(fakeEvent);
     }
 }
-
 
 ////////////////////////////////////
 // :b: setting up main text area:b:
