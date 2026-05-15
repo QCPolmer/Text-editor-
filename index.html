@@ -40,6 +40,17 @@ if (window.location.protocol === 'http:' ) {
         max-width: 100vw;
         box-sizing: border-box;
     }
+	#htmTxt_ModeBar button {
+    font-size: 18px;
+    padding: 10px 14px;
+    background: #333;
+    color: #ddd;
+    border: 1px solid #555;
+    border-radius: 6px;
+    min-width: 42px;
+    touch-action: manipulation;
+    font-family: monospace;
+}
 </style>
 </head>
 <body>
@@ -117,7 +128,7 @@ COPY_PASTE BUFFER:<br>
 
 
 <!-- Replace the old carousel div with this -->
-<div id="htmTxt_ModeBar" style=" background:#222;  justify-content:center; flex-wrap:wrap; border:1px solid #444;">
+<div id="htmTxt_ModeBar" style="display:none; background:#222;  justify-content:center; flex-wrap:wrap; border:1px solid #444;">
     <!-- Row 1: Movement -->
     
     
@@ -723,6 +734,9 @@ var _htmTxt_open_files__local_storage_var_name = "htmTxt_open_files";
 // --------- GOING TO USE 'prompt' for handling for now.
 // htmTxt_cmd_LAST_TEXTAREA_SELECTED
 
+var htmTxt_AUTOCOMP_Carousel = 
+	document.getElementById("htmTxt_AUTOCOMP_Carousel");
+
 //gemini made this one
 function htmTxt_AUTOCOMP_refresh_carousel() {
     var t = htmTxt_cmd_LAST_TEXTAREA_SELECTED;
@@ -1214,8 +1228,12 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 	if(e.keyCode == 73){ // 'i' key
 		htmTxt_cmd_IN_NON_EDIT_MODE = false; 
 		htmTxt_cmd_last_txtArea_value = t.value; 
+		htmTxt_AUTOCOMP_Carousel.style.display = "flex";
+   		htmTxt_ModeBar.style.display = "none";
 		htmTxt_AUTOCOMP_refresh_carousel();}
 	if(e.keyCode == 65){ // 'a' key
+		htmTxt_AUTOCOMP_Carousel.style.display = "flex";
+   		htmTxt_ModeBar.style.display = "none";
 		t.selectionStart +=1; t.selectionEnd +=1; htmTxt_cmd_IN_NON_EDIT_MODE = false; 
 		
 		htmTxt_cmd_last_txtArea_value = t.value; 
@@ -1420,7 +1438,11 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['oninput'] = async function(e) {
         // Lock it down
         htmTxt_cmd_IN_NON_EDIT_MODE = true;
         htmTxt_cmd_last_txtArea_value = t.value;
-        return;
+       
+	htmTxt_AUTOCOMP_Carousel.style.display = "none";
+	htmTxt_ModeBar.style.display = "flex";
+	
+	 return;
     }
 
     // If it's normal typing, just update the tracker
@@ -1448,7 +1470,13 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'] = async function(e) {
 
 	
    if(htmTxt_cmd_IN_NON_EDIT_MODE ){
-	  htmTxt_cmd_NON_EDIT_MODE(e); return;}
+	htmTxt_AUTOCOMP_Carousel.style.display = "none";
+	htmTxt_ModeBar.style.display = "flex";
+
+	htmTxt_cmd_NON_EDIT_MODE(e); return;}
+  
+   htmTxt_AUTOCOMP_Carousel.style.display = "flex";
+   htmTxt_ModeBar.style.display = "none";
 
    if(htmTxt__copy_paste_tool_data.length == 0){
 	htmTxt__copy_paste_tool_data.push("---PASTE BUFFER NOT SYNCED WITH SYSTEM PASTE BUFFER: TRY CTRL+V then CTRL+Z- TO SYNC!--"); }
@@ -1513,6 +1541,8 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'] = async function(e) {
 	// MUST be below the JK test above
     if (e.key === "Escape") {
         htmTxt_cmd_IN_NON_EDIT_MODE = true;
+	htmTxt_AUTOCOMP_Carousel.style.display = "none";
+   	htmTxt_ModeBar.style.display = "flex";
         e.preventDefault();
         return;
     }
