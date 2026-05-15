@@ -3,7 +3,7 @@
 // (mostly as a 'backup')
 // ALSO, avoid on mobile, 
 //  the key-handling on mobile is broken 
-
+// AS IN: mobile system don't do that well 
 
 OK, the idea is to get a bunch of vim 
 features (from my custom vimrc) as 
