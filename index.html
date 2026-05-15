@@ -184,9 +184,13 @@ COPY_PASTE BUFFER:<br>
 
 
 
-
-<div id="htmTxt_AUTOCOMP_Carousel" style="display:flex; overflow-x:auto; background:#eee; border:1px solid #000; height:30px; align-items:center;">
-    <span style="font-size:10px; color:#666;">...type...</span> </div>
+<div style="display:flex; align-items:center; gap:2px; flex-wrap:wrap; margin-bottom:6px;">
+    <button onclick="htmTxt_simulateKey(27)" style="font-size:16px; padding:0px 0px;">ESC</button>
+    
+    <div id="htmTxt_AUTOCOMP_Carousel" style="display:flex; overflow-x:auto; background:#eee; border:1px solid #000; height:30px; align-items:center; flex:1;">
+        <span style="font-size:10px; color:#666; padding:0 8px;">...type...</span> 
+    </div>
+</div>
  <!-- Line Number Indicator -->
     <button id="button_line_numb_div" onclick="htmTxt_Paste_to_txtArea()"> 
         L: 1-PASTE
