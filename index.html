@@ -17,6 +17,9 @@ if (window.location.protocol === 'http:' ) {
         line-height: 1.25;
         box-sizing: border-box; /* Ensures width:100% includes padding */
         -webkit-text-size-adjust: 100%;
+	-webkit-user-select: text;
+    	user-select: text;
+    	touch-action: manipulation; /* helps with mobile */
     }
    #htmTxt_AUTOCOMP_Carousel {
         display: flex;
@@ -475,6 +478,8 @@ var htmTxt_CMD_CHAR = ";";
 var htmTxt_INTERNAL_CHAR = ":";
 var htmTxt_cmd_last_keycode_down ="";
 var htmTxt_cmd_last_txtArea_value = "";
+
+var htmTxt_cmd_ctrl_keydown  = false;
 
 var htmTxt_CURRENT_FILENAME_div = 
 	document.getElementById( "htmTxt_CURRENT_FILENAME_div");
@@ -1069,6 +1074,7 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 	var t = e.target;
         if (!t) return 0;
 
+	if (!t || !t.focus) return;
 	t.focus();
 	
 	//////////////////////////////////////////////	
@@ -1209,16 +1215,6 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 		prompt( tmpP, tmpP);
 	}
 
-	if(e.keyCode == 89 && htmTxt_cmd_last_keycode_down == 89){ 
-						// 'y'+ shift
-		var tmpTxt = htmTxt_txtArea_get_selected_lines(
-			t, false); //tmpRemoveLinesOPTIONAL)
-		await htmTxt__copyText_to_clipboard(tmpTxt);
-		await htmTxt_copy_paste_tool_update(true,
-			tmpTxt );
-		e.preventDefault();
-		return;
-	}
 	//gemini rewrote next 2 blocks
 	// Inside the 'y' (Yank) block:
 	if(e.keyCode == 89 && htmTxt_cmd_last_keycode_down == 89){ //'y'
@@ -1275,16 +1271,27 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 //  OK, can do full 'edit mode' easily
 // --- have 
 
+// gemini wrote, grok rewrote
+htmTxt_settup_main_textareas_cmdKey_valueFunct['onfocus'] = function(e) {
+    const t = e.target;
+    htmTxt_cmd_LAST_TEXTAREA_SELECTED = t;
+    htmTxt_cmd_last_txtArea_value = t.value;   // resync
+    
+    // Gentle scroll on mobile after keyboard appears
+    setTimeout(() => {
+        if (document.activeElement === t) {
+            t.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+    }, 300);
+};
 
-htmTxt_settup_main_textareas_cmdKey_valueFunct['onfocus'] = async function(e){ htmTxt_cmd_LAST_TEXTAREA_SELECTED = e.target;  
-	var t = e.target;
-	t.addEventListener('focus', function() {
-	    // Small delay to allow the mobile keyboard to finish its "push" animation
-	    setTimeout(() => {
-		window.scrollTo(0, document.body.scrollHeight);
-	    }, 300);
-	});
-}
+htmTxt_settup_main_textareas_cmdKey_valueFunct['onblur'] = function(e) {
+    // Only go to non-edit if we lost focus to something outside the textarea
+    if (document.activeElement && 
+        document.activeElement.tagName !== "TEXTAREA") {
+        htmTxt_cmd_IN_NON_EDIT_MODE = true;
+    }
+};
 
 var htmTxt_last_line_break_disp_div = 
 	document.getElementById("htmTxt_last_line_break_disp_div");
@@ -1316,66 +1323,53 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['onclick'] = async function(e){
 	htmTxt_txtArea_update_line_numb(t);
 }
 
-// FROM GEMINI: to allow use on mobile 
+// FROM GEMINI, REWROTE BY GROK: to allow use on mobile 
 //		(ask keypresses are broken between them)
 // This catches the text AFTER the mobile keyboard forces it in
-htmTxt_settup_main_textareas_cmdKey_valueFunct['oninput'] = async function(e) {
-    var t = e.target;
-    
-   
-    // --- 1. NON-EDIT MODE COMMAND CATCHER ---
-    if (htmTxt_cmd_IN_NON_EDIT_MODE && 
-	(e.key.length > 1 && e.key != "Escape" && e.key != "Enter")) {
-	
-        // Find the character the mobile keyboard just forced in
-        var typedChar = t.value.slice(t.selectionStart - 1, t.selectionStart).toLowerCase();
+htmTxt_settup_main_textareas_cmdKey_valueFunct['oninput'] = function(e) {
+    const t = e.target;
+    if (!t) return;
+
+    // ------------------- NON-EDIT MODE -------------------
+    if (htmTxt_cmd_IN_NON_EDIT_MODE) {
+        const inserted = t.value.slice(Math.max(0, t.selectionStart - 1), t.selectionStart);
         
-        // ROLLBACK: Erase the character immediately so it doesn't mess up the file
         t.value = htmTxt_cmd_last_txtArea_value;
-        
-        // Build a "Fake Event" to feed your existing logic
-        if (typedChar) {
-            var fakeEvent = {
+        htmTxt_txtArea_jump_to_index(t, t.selectionStart);   // restore cursor
+
+        if (inserted && inserted.length > 0) {
+            const fakeEvent = {
                 target: t,
-                key: typedChar,
-                keyCode: typedChar.toUpperCase().charCodeAt(0), // Maps 'd' to 68, 'j' to 74
-                shiftKey: false, // Can't easily detect mobile shift here, but covers base commands
-                preventDefault: function(){}
+                key: inserted,
+                keyCode: inserted.toUpperCase().charCodeAt(0) || inserted.charCodeAt(0) || 0,
+                shiftKey: false,
+                preventDefault: () => {}
             };
-            // Route it to your engine!
             htmTxt_cmd_NON_EDIT_MODE(fakeEvent);
         }
         return;
     }
 
-    // --- 2. INSERT MODE: THE 'JK' ESCAPE CATCHER ---
-    // Inside the oninput handler
-    var curPos = t.selectionStart;
-    var textChunk = t.value.slice(Math.max(0, curPos - 2), curPos).toLowerCase();
+    // ------------------- NORMAL EDIT MODE -------------------
+    const curPos = t.selectionStart || 0;
+    const lastTwo = t.value.slice(Math.max(0, curPos - 2), curPos).toLowerCase();
 
-     if (textChunk === "jk" || textChunk === "kj") {
-        var curPos = t.selectionStart - 2;
+    if (lastTwo === "jk" || lastTwo === "kj") {
+        t.value = t.value.slice(0, curPos - 2) + t.value.slice(curPos);
+        htmTxt_txtArea_jump_to_index(t, curPos - 2);
         
-        // ROLLBACK: Erase the 'jk'
-        t.value = t.value.slice(0, curPos) + t.value.slice(t.selectionStart);
-        htmTxt_txtArea_jump_to_index(t, curPos);
-        
-        // Lock it down
         htmTxt_cmd_IN_NON_EDIT_MODE = true;
         htmTxt_cmd_last_txtArea_value = t.value;
+        t.focus();
         return;
     }
 
-    // If it's normal typing, just update the tracker
     htmTxt_cmd_last_txtArea_value = t.value;
 
-    // ADD THIS: Snap history on spacebar or new line during mobile typing
-    if (e.data != null &&(e.data === " " || e.data.length > 1 
-		|| e.inputType === "insertLineBreak")) {
+    if (e.data === " " || e.inputType === "insertLineBreak" || e.inputType === "insertParagraph") {
         htmTxt_txtArea_undo_redo__ADD(t);
     }
 };
-
 
 // :b: edit mode :b:
 
@@ -1385,15 +1379,15 @@ var htmTxt_cmd_last_undo_i = -1;
 //document.body.onkeydown= function(e){ console.log(e.keyCode + " " + e.key);  } 
 htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'] = async function(e) {
     var t = e.target;
-
     htmTxt_txtArea_update_line_numb(t);
+
+	
+   if(htmTxt_cmd_IN_NON_EDIT_MODE ){
+	  htmTxt_cmd_NON_EDIT_MODE(e); return;}
 
    if(htmTxt__copy_paste_tool_data.length == 0){
 	htmTxt__copy_paste_tool_data.push("---PASTE BUFFER NOT SYNCED WITH SYSTEM PASTE BUFFER: TRY CTRL+V then CTRL+Z- TO SYNC!--"); }
    
-   if(htmTxt_cmd_IN_NON_EDIT_MODE ){
-
-	  htmTxt_cmd_NON_EDIT_MODE(e); return;}
 
    //updating autocomplete
    htmTxt_AUTOCOMP_update_core_n_get_autocomp( t );
@@ -1452,6 +1446,12 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'] = async function(e) {
 		return e.preventDefault(); }  }
  */
 	// MUST be below the JK test above
+    if (e.key === "Escape") {
+        htmTxt_cmd_IN_NON_EDIT_MODE = true;
+        e.preventDefault();
+        return;
+    }
+
     htmTxt_cmd_last_txtArea_value = t.value;
     htmTxt_cmd_last_keycode_down = e.keyCode;	
    ///////////////////////////////////
