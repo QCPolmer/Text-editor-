@@ -352,12 +352,28 @@ function htmTxt_txtArea_grab_word_look_back(t){ // textarea element
 
 //////////////////////////////
 ///////////////// Jumps textarea select 
-//grok rewrote
-function htmTxt_txtArea_jump_to_index(t, getIndex) {
-    if (!t) return;
-    const safeIndex = Math.max(0, Math.min(t.value.length, getIndex || 0));
-    t.selectionStart = safeIndex;
-    t.selectionEnd = safeIndex;}
+//grok rewrote, then gemini
+function htmTxt_txtArea_jump_to_index(t, index) {
+    if (index < 0) index = 0;
+    if (index > t.value.length) index = t.value.length;
+
+    // 1. FREEZE: Take a snapshot of the exact pixel scroll position
+    var savedScroll = t.scrollTop;
+
+    // 2. MOVE: Update the cursor
+    t.selectionStart = t.selectionEnd = index;
+
+    // 3. NO BLUR/FOCUS LOOP: Only focus if the box somehow lost it entirely
+    if (document.activeElement !== t) {
+        t.focus();
+    }
+
+    // 4. RESTORE: Jam the scrollbar back exactly where it was. 
+    // This stops the browser from doing its "auto-jump" to the cursor.
+    t.scrollTop = savedScroll;
+
+    htmTxt_txtArea_update_line_numb(t);
+}
 function htmTxt_txtArea_jump_to_prevLine(t ){ // t=textarea element
 	htmTxt_txtArea_jump_to_index( t,
 		htmTxt_txtArea_grab_curLine_INDEX_START(t) - 1); 
@@ -1342,23 +1358,29 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['oninput'] = function(e) {
 
     // ------------------- NON-EDIT MODE -------------------
     if (htmTxt_cmd_IN_NON_EDIT_MODE) {
-        const inserted = t.value.slice(Math.max(0, t.selectionStart - 1), t.selectionStart);
-        
-        t.value = htmTxt_cmd_last_txtArea_value;
-        htmTxt_txtArea_jump_to_index(t, t.selectionStart);   // restore cursor
-
-        if (inserted && inserted.length > 0) {
-            const fakeEvent = {
-                target: t,
-                key: inserted,
-                keyCode: inserted.toUpperCase().charCodeAt(0) || inserted.charCodeAt(0) || 0,
-                shiftKey: false,
-                preventDefault: () => {}
-            };
-            htmTxt_cmd_NON_EDIT_MODE(fakeEvent);
-        }
-        return;
-    }
+	    var typedChar = t.value.slice(t.selectionStart - 1, t.selectionStart).toLowerCase();
+	    
+	    // 1. FREEZE scroll
+	    var savedScroll = t.scrollTop;
+	    
+	    // 2. ROLLBACK text
+	    t.value = htmTxt_cmd_last_txtArea_value; 
+	    
+	    // 3. RESTORE scroll immediately so the screen doesn't flinch
+	    t.scrollTop = savedScroll;
+	    
+	    if (typedChar === 'h' || typedChar === 'l' || typedChar === 'j' || typedChar === 'k') {
+		var fakeEvent = {
+		    target: t,
+		    key: typedChar,
+		    keyCode: typedChar.toUpperCase().charCodeAt(0),
+		    preventDefault: function(){}
+		};
+		htmTxt_cmd_NON_EDIT_MODE(fakeEvent);
+		htmTxt_cmd_last_txtArea_value = t.value; 
+		return;
+	    }
+	}
 
     // ------------------- NORMAL EDIT MODE -------------------
     const curPos = t.selectionStart || 0;
