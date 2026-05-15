@@ -1142,15 +1142,7 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 	if(e.keyCode == 72){ // 'h'
 	    let newPos = Math.max(0, t.selectionStart - 1);
 	    htmTxt_txtArea_jump_to_index(t, newPos);
-	    t.focus();
-	    
-	    // Extra safety: force it again after a tiny delay (helps mobile)
-	    setTimeout(() => {
-		if (t.selectionStart !== newPos) {
-		    htmTxt_txtArea_jump_to_index(t, newPos);
-		}
-	    }, 10);
-	    
+	    t.focus(); 
 	    return e.preventDefault();  
 	}
 	//grok rewrote...
@@ -1158,7 +1150,6 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 	    let newPos = Math.min(t.value.length, t.selectionStart + 1);
 	    htmTxt_txtArea_jump_to_index(t, newPos);
 	    t.focus();
-	    setTimeout(() => htmTxt_txtArea_jump_to_index(t, newPos), 10);
 	    return e.preventDefault();  
 	}
 	if(e.keyCode == 52){ // '$'
@@ -1301,13 +1292,7 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['onfocus'] = function(e) {
     const t = e.target;
     htmTxt_cmd_LAST_TEXTAREA_SELECTED = t;
     htmTxt_cmd_last_txtArea_value = t.value;   // resync
-    
-    // Gentle scroll on mobile after keyboard appears
-    setTimeout(() => {
-        if (document.activeElement === t) {
-            t.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-    }, 300);
+   
 };
 
 htmTxt_settup_main_textareas_cmdKey_valueFunct['onblur'] = function(e) {
