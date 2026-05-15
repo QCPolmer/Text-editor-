@@ -1108,6 +1108,9 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 		    htmTxt_txtArea_jump_to_index( t,
 			htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row + 
 			htmTxt_txtArea_grab_curLine_INDEX_START(t));}
+		//grok added...
+		let newPos = t.selectionStart; setTimeout(() => 
+			htmTxt_txtArea_jump_to_index(t, newPos), 10);
 		t.focus();
 		return e.preventDefault();  }
 	if(e.keyCode == 74){ // 'j'
@@ -1125,17 +1128,35 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 		    htmTxt_txtArea_jump_to_index( t,
 			htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row + 
 			htmTxt_txtArea_grab_curLine_INDEX_START(t));}
+		//grok added...
+		let newPos = t.selectionStart; setTimeout(() => 
+			htmTxt_txtArea_jump_to_index(t, newPos), 10);
 		t.focus();
 		return e.preventDefault(); }
 	htmTxt_cmd_NON_EDIT_MODE_hjkl_caught_row = -1;
+	//grok rewrote...
 	if(e.keyCode == 72){ // 'h'
-		htmTxt_txtArea_jump_to_index( t, t.selectionStart-1);
-		t.focus();
-		return e.preventDefault();  }
+	    let newPos = Math.max(0, t.selectionStart - 1);
+	    htmTxt_txtArea_jump_to_index(t, newPos);
+	    t.focus();
+	    
+	    // Extra safety: force it again after a tiny delay (helps mobile)
+	    setTimeout(() => {
+		if (t.selectionStart !== newPos) {
+		    htmTxt_txtArea_jump_to_index(t, newPos);
+		}
+	    }, 10);
+	    
+	    return e.preventDefault();  
+	}
+	//grok rewrote...
 	if(e.keyCode == 76){ // 'l'
-		htmTxt_txtArea_jump_to_index( t, t.selectionStart+1);
-		t.focus();
-		return e.preventDefault(); }
+	    let newPos = Math.min(t.value.length, t.selectionStart + 1);
+	    htmTxt_txtArea_jump_to_index(t, newPos);
+	    t.focus();
+	    setTimeout(() => htmTxt_txtArea_jump_to_index(t, newPos), 10);
+	    return e.preventDefault();  
+	}
 	if(e.keyCode == 52){ // '$'
 		htmTxt_txtArea_jump_to_index( t, 
 			htmTxt_txtArea_grab_curLine_INDEX_END(t));
