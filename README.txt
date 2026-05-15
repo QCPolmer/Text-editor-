@@ -2,7 +2,10 @@
 // and no promises on updates
 // (mostly as a 'backup')
 // ALSO, for mobile, in NORMAL mode,
-//   use one screen buttons. 
+//   use on-screen buttons.
+// AS WHOEVER MADE MOBILE-KEYS 
+// IN  MOBILE-BROWSER BROKE THE STANDARD METHOD
+// OF DETECTING KEYPRESS. 
 
 OK, the idea is to get a bunch of vim 
 features (from my custom vimrc) as 
