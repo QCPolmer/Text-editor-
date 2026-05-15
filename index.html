@@ -275,7 +275,7 @@ function htmTxt_txtArea_grab_curLine_INDEX_END(t){ // textarea element
 	var tmpEnd = t.value.indexOf('\n', t.selectionStart);
 	if(tmpEnd == -1){ tmpEnd = t.value.length;} 
 	return tmpEnd}
-var htmTxt_txtArea_grab_word_look_back__ACCEPTABLE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.1234567890_";
+var htmTxt_txtArea_grab_word_look_back__ACCEPTABLE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_";
 function htmTxt_txtArea_grab_word_look_back_INDEX_START(t){
 	var tmpStart = t.selectionStart-1;
 	while(tmpStart!=-1 &&  -1 != 
