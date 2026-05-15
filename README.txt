@@ -1,6 +1,8 @@
 // WARNING: this is considered alpha,
 // and no promises on updates
 // (mostly as a 'backup')
+// ALSO, avoid on mobile, 
+//  the key-handling on mobile is broken 
 
 
 OK, the idea is to get a bunch of vim 
