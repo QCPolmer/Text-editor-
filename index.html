@@ -352,27 +352,11 @@ function htmTxt_txtArea_grab_word_look_back(t){ // textarea element
 
 //////////////////////////////
 ///////////////// Jumps textarea select 
-//grok rewrote, then gemini
-function htmTxt_txtArea_jump_to_index(t, index) {
-    if (index < 0) index = 0;
-    if (index > t.value.length) index = t.value.length;
-
-    // 1. FREEZE: Take a snapshot of the exact pixel scroll position
-    var savedScroll = t.scrollTop;
-
-    // 2. MOVE: Update the cursor
-    t.selectionStart = t.selectionEnd = index;
-
-    // 3. NO BLUR/FOCUS LOOP: Only focus if the box somehow lost it entirely
-    if (document.activeElement !== t) {
-        t.focus();
-    }
-
-    // 4. RESTORE: Jam the scrollbar back exactly where it was. 
-    // This stops the browser from doing its "auto-jump" to the cursor.
-    t.scrollTop = savedScroll;
-
-    htmTxt_txtArea_update_line_numb(t);
+//grok rewrote, then gemini, then grok
+function htmTxt_txtArea_jump_to_index(t, getIndex) {
+    if (!t) return;
+    const safe = Math.max(0, Math.min(t.value.length, getIndex || 0));
+    t.setSelectionRange(safe, safe, "none");
 }
 function htmTxt_txtArea_jump_to_prevLine(t ){ // t=textarea element
 	htmTxt_txtArea_jump_to_index( t,
@@ -1349,63 +1333,86 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['onclick'] = async function(e){
 	htmTxt_txtArea_update_line_numb(t);
 }
 
+var htmTxt_isProcessingCommand = false;
+
 // FROM GEMINI, REWROTE BY GROK: to allow use on mobile 
 //		(ask keypresses are broken between them)
 // This catches the text AFTER the mobile keyboard forces it in
 htmTxt_settup_main_textareas_cmdKey_valueFunct['oninput'] = function(e) {
     const t = e.target;
-    if (!t) return;
+    if (!t || htmTxt_isProcessingCommand) return;
+
+    htmTxt_isProcessingCommand = true;
 
     // ------------------- NON-EDIT MODE -------------------
     if (htmTxt_cmd_IN_NON_EDIT_MODE) {
-        const inserted = t.value.slice(Math.max(0, t.selectionStart - 1), t.selectionStart);
-        
-        // Rollback
-        t.value = htmTxt_cmd_last_txtArea_value;
-        
-        // Critical: Use RAF + setSelectionRange("none")
+        // Try browser-native undo first (most stable on mobile)
+        try {
+            document.execCommand('undo');
+        } catch (err) {
+            t.value = htmTxt_cmd_last_txtArea_value;   // fallback
+        }
+
         requestAnimationFrame(() => {
-            const targetPos = Math.max(0, t.selectionStart - 1);  // ghost char offset fix
+            const targetPos = Math.max(0, t.selectionStart - 1);
             t.setSelectionRange(targetPos, targetPos, "none");
             t.focus();
+
+            // Extra enforcement
+            setTimeout(() => {
+                t.setSelectionRange(targetPos, targetPos, "none");
+            }, 20);
         });
+
+        const inserted = t.value.slice(Math.max(0, t.selectionStart - 1), t.selectionStart);
 
         if (inserted && inserted.length > 0) {
             const fakeEvent = {
                 target: t,
                 key: inserted,
-                keyCode: inserted.toUpperCase().charCodeAt(0) || inserted.charCodeAt(0) || 0,
+                keyCode: inserted.toUpperCase().charCodeAt(0) || 0,
                 shiftKey: false,
                 preventDefault: () => {}
             };
-            // Small delay before command processing
-            setTimeout(() => htmTxt_cmd_NON_EDIT_MODE(fakeEvent), 10);
+            setTimeout(() => {
+                htmTxt_cmd_NON_EDIT_MODE(fakeEvent);
+                htmTxt_isProcessingCommand = false;
+            }, 30);
+        } else {
+            htmTxt_isProcessingCommand = false;
         }
         return;
     }
 
-    // ------------------- NORMAL EDIT MODE (JK escape) -------------------
+    // ------------------- NORMAL EDIT MODE (JK) -------------------
     const curPos = t.selectionStart || 0;
     const lastTwo = t.value.slice(Math.max(0, curPos - 2), curPos).toLowerCase();
 
     if (lastTwo === "jk" || lastTwo === "kj") {
-        t.value = t.value.slice(0, curPos - 2) + t.value.slice(curPos);
-        
+        try {
+            document.execCommand('undo');
+        } catch (err) {
+            t.value = t.value.slice(0, curPos - 2) + t.value.slice(curPos);
+        }
+
         requestAnimationFrame(() => {
             htmTxt_txtArea_jump_to_index(t, curPos - 2);
             t.focus();
         });
-        
+
         htmTxt_cmd_IN_NON_EDIT_MODE = true;
         htmTxt_cmd_last_txtArea_value = t.value;
+        htmTxt_isProcessingCommand = false;
         return;
     }
 
     htmTxt_cmd_last_txtArea_value = t.value;
 
-    if (e.data === " " || e.inputType === "insertLineBreak" || e.inputType === "insertParagraph") {
+    if (e.data === " " || e.inputType?.includes("LineBreak") || e.inputType === "insertParagraph") {
         htmTxt_txtArea_undo_redo__ADD(t);
     }
+
+    htmTxt_isProcessingCommand = false;
 };
 
 // :b: edit mode :b:
