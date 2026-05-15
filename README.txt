@@ -22,4 +22,5 @@ df in normal mode for menu)
 
 AI (gemini) helped with some of the low-
 level stuff.
+Grok also did some troubleshooting.
 https://qcpolmer.github.io/Text-editor-/
