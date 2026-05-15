@@ -184,7 +184,7 @@ COPY_PASTE BUFFER:<br>
 
 
 
-<div style="display:flex; align-items:center; gap:2px; flex-wrap:wrap; margin-bottom:6px;">
+<div style="display:flex; align-items:center; gap:2px; flex-wrap:wrap; margin-bottom:6px;" id="htmTxt_AUTOCOMP_Carousel_HOLDER">
     <button onclick="htmTxt_simulateKey(27)" style="font-size:16px; padding:0px 0px;">ESC</button>
     
     <div id="htmTxt_AUTOCOMP_Carousel" style="display:flex; overflow-x:auto; background:#eee; border:1px solid #000; height:30px; align-items:center; flex:1;">
@@ -764,6 +764,8 @@ var _htmTxt_open_files__local_storage_var_name = "htmTxt_open_files";
 
 var htmTxt_AUTOCOMP_Carousel = 
 	document.getElementById("htmTxt_AUTOCOMP_Carousel");
+var htmTxt_AUTOCOMP_Carousel_HOLDER = 
+	document.getElementById("htmTxt_AUTOCOMP_Carousel_HOLDER");
 
 //gemini made this one
 function htmTxt_AUTOCOMP_refresh_carousel() {
@@ -1256,11 +1258,11 @@ async function htmTxt_cmd_NON_EDIT_MODE (e){
 	if(e.keyCode == 73){ // 'i' key
 		htmTxt_cmd_IN_NON_EDIT_MODE = false; 
 		htmTxt_cmd_last_txtArea_value = t.value; 
-		htmTxt_AUTOCOMP_Carousel.style.display = "flex";
+		htmTxt_AUTOCOMP_Carousel_HOLDER.style.display = "flex";
    		htmTxt_ModeBar.style.display = "none";
 		htmTxt_AUTOCOMP_refresh_carousel();}
 	if(e.keyCode == 65){ // 'a' key
-		htmTxt_AUTOCOMP_Carousel.style.display = "flex";
+		htmTxt_AUTOCOMP_Carousel_HOLDER.style.display = "flex";
    		htmTxt_ModeBar.style.display = "none";
 		t.selectionStart +=1; t.selectionEnd +=1; htmTxt_cmd_IN_NON_EDIT_MODE = false; 
 		
@@ -1470,7 +1472,7 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['oninput'] = async function(e) {
         htmTxt_cmd_IN_NON_EDIT_MODE = true;
         htmTxt_cmd_last_txtArea_value = t.value;
        
-	htmTxt_AUTOCOMP_Carousel.style.display = "none";
+	htmTxt_AUTOCOMP_Carousel_HOLDER.style.display = "none";
 	htmTxt_ModeBar.style.display = "flex";
 	
 	 return;
@@ -1501,12 +1503,12 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'] = async function(e) {
 
 	
    if(htmTxt_cmd_IN_NON_EDIT_MODE ){
-	htmTxt_AUTOCOMP_Carousel.style.display = "none";
+	htmTxt_AUTOCOMP_Carousel_HOLDER.style.display = "none";
 	htmTxt_ModeBar.style.display = "flex";
 
 	htmTxt_cmd_NON_EDIT_MODE(e); return;}
   
-   htmTxt_AUTOCOMP_Carousel.style.display = "flex";
+   htmTxt_AUTOCOMP_Carousel_HOLDER.style.display = "flex";
    htmTxt_ModeBar.style.display = "none";
 
    if(htmTxt__copy_paste_tool_data.length == 0){
@@ -1572,7 +1574,7 @@ htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'] = async function(e) {
 	// MUST be below the JK test above
     if (e.key === "Escape") {
         htmTxt_cmd_IN_NON_EDIT_MODE = true;
-	htmTxt_AUTOCOMP_Carousel.style.display = "none";
+	htmTxt_AUTOCOMP_Carousel_HOLDER.style.display = "none";
    	htmTxt_ModeBar.style.display = "flex";
         e.preventDefault();
         return;
