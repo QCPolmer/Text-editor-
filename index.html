@@ -728,13 +728,16 @@ function htmTxt_AUTOCOMP_prompt_autcomp( t ){  //textArea
 
 	var tmpWords = htmTxt_AUTOCOMP_update_core_n_get_autocomp( 
 				t, getWordFrament ); 
-	var tmpOutDips = ""; var tmpChoices = "abcdefghijklmopqrstuv";
+	var tmpOutDips = "ENTER works for A:"; 
+	var tmpChoices = "abcdefghijklmopqrstuv";
 	for(var i=0; i< tmpWords.length; i+=1){
 		tmpOutDips = tmpOutDips+ 
 			tmpChoices[i] + ": " + tmpWords[i] + " \n"; }
+	
+	var tmpPromptOut = prompt( tmpOutDips ).trim();
+	if(tmpPromptOut ==""){ tmpPromptOut = "a";} 
 
-	var tmpWord = tmpWords[ tmpChoices.indexOf( prompt( 
-				tmpOutDips ).trim() )  ];
+	var tmpWord = tmpWords[ tmpChoices.indexOf( tmpPromptOut )  ];
 	if(tmpWord == null){ return getWordFrament; }
 	
 	t.value = t.value.slice(0,tmp_i) + tmpWord + 
