@@ -115,6 +115,41 @@ COPY_PASTE BUFFER:<br>
 <br>
 <textarea id="htmTxt_Main_textarea_div" placeholder="Paste here also adds to list..." style="font-family:monospace; width:100%; height:200px;"></textarea>
 
+
+<!-- Replace the old carousel div with this -->
+<div id="htmTxt_ModeBar" style=" background:#222; padding:6px; gap:4px; justify-content:center; flex-wrap:wrap; border:1px solid #444;">
+    <!-- Row 1: Movement -->
+    
+    
+    <button onclick="htmTxt_simulateKey(73)">-i</button>
+    <button onclick="htmTxt_simulateKey(89)">-y</button>
+    <button onclick="htmTxt_simulateKey(80)">-p</button>
+    <button onclick="htmTxt_simulateKey(68)">-d</button>
+	
+    <button onclick="htmTxt_simulateKey(72)">-h</button>
+    <button onclick="htmTxt_simulateKey(74)">-j</button>
+    <button onclick="htmTxt_simulateKey(75)">-k</button>
+    <button onclick="htmTxt_simulateKey(76)">-l</button>
+    
+ <br>
+    <!-- Row 2: Actions -->
+     
+    <button onclick="htmTxt_simulateKey(51)">-#</button>
+    <button onclick="htmTxt_simulateKey(53)">-%</button>
+    <button onclick="htmTxt_simulateKey(58)">-:</button>
+    <button onclick="htmTxt_simulateKey(52)">-$</button>
+    <button onclick="htmTxt_simulateKey(71)">-g</button>
+    <button onclick="htmTxt_simulateKey(78)">-n</button>
+    <button onclick="htmTxt_simulateKey(191)">-/</button>
+
+</div>
+
+
+
+
+
+
+
 <div id="htmTxt_AUTOCOMP_Carousel" style="display:flex; overflow-x:auto; background:#eee; border:1px solid #000; height:30px; align-items:center;">
     <span style="font-size:10px; color:#666;">...type...</span> </div>
  <!-- Line Number Indicator -->
@@ -1588,6 +1623,46 @@ window.addEventListener('beforeunload', (event) => {
     //event.returnValue = ''; // This triggers the browser's default dialog
 });
 
+
+// ====================== ON-SCREEN COMMAND BAR ======================
+var htmTxt_ModeBar = null;
+
+htmTxt_ModeBar = document.getElementById("htmTxt_ModeBar");
+
+
+function htmTxt_update_mode_bar() {
+    if (!htmTxt_ModeBar) return;
+    htmTxt_ModeBar.style.display = htmTxt_cmd_IN_NON_EDIT_MODE ? "flex" : "none";
+    
+    // Optional: hide autocomplete when bar is shown
+    const carousel = document.getElementById("htmTxt_AUTOCOMP_Carousel");
+    if (carousel) carousel.style.display = htmTxt_cmd_IN_NON_EDIT_MODE ? "none" : "flex";
+}
+
+// Simulate keypress ? feeds your existing keydown logic
+function htmTxt_simulateKey(keyCode, shiftKey = false) {
+    const t = htmTxt_cmd_LAST_TEXTAREA_SELECTED;
+    if (!t) return;
+
+    t.focus();
+
+    const fakeEvent = {
+        target: t,
+        keyCode: keyCode,
+        shiftKey: shiftKey,
+        preventDefault: function(){},
+        stopImmediatePropagation: function(){}
+    };
+
+    // Fire it through your existing handler
+    if (typeof htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'] === 'function') {
+        htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'](fakeEvent);
+    } else if (t.onkeydown) {
+        t.onkeydown(fakeEvent);
+    }
+}
+
+
 ////////////////////////////////////
 // :b: setting up main text area:b:
 ////////////////////////////////
@@ -1602,6 +1677,9 @@ htmTxt_open_files_autosave__update( true);
 htmTxt_Main_textarea_div.focus();
 htmTxt_txtArea_undo_redo__ADD(
 	htmTxt_Main_textarea_div );
+
+//htmTxt_init_mode_bar();
+//htmTxt_update_mode_bar();   // initial state
 
 </script>
 
