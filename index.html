@@ -79,6 +79,9 @@ if (window.location.protocol === 'http:' ) {
 <br>
 <h2> SCROLL DOWN TO BOTTOM FOR MAIN EDITOR </h2>
 <br>
+<button onclick="htmTxt__reset_to_default()">Reset to default (clears localstorage)</button><br>
+<br>
+<br>
 JK/ DF(for menu) works! ('cntrl + SHIFT+ n' for autocomp, NEEDS SHIFT)
 <br>
 EXIT EDIT MODE: 'esc' OR 'kj/jk', (TAB on select lines indents/TAB+SHIFT de-indents)--- 
@@ -97,6 +100,9 @@ USE ARROWS AND SHIFT TO SELECT (ctrl+arrow or ctrl+shift+arrow for words)
 <br> //START//...//END// (each should take up a line) for multi-line js, 
 <br> press 'enter' on bottom line!
 
+<br>
+<button onclick="htmTxt_ui_scale_change(-2);"> TXT-SMALLER(-) </button>
+<button onclick="htmTxt_ui_scale_change(2);"> TXT-BIGGER(+) </button>
 <br> 
 
     
@@ -128,7 +134,11 @@ COPY_PASTE BUFFER:<br>
 <textarea autocapitalize="none" autocomplete="off" autocorrect="off"
  id="htmTxt_PasteBox" placeholder="Paste here also adds to list..." style="width:100%; height:50px;"></textarea>
 <br>
+
+
 (select old copy data in right hand menu over textarea below)<br><br>
+<button onclick="htmTxt_ui_toggle_fullscreen()" >
+   <h3> FULLSCREEN TOGGLE</h3> </button><br>
 <b id="htmTxt_last_line_break_disp_div">L:1 </b>
 ::
 <b id="htmTxt_CURRENT_FILENAME_div"></b>
@@ -221,11 +231,75 @@ COPY_PASTE BUFFER:<br>
 <br><br>
 <button onclick="htmTxt_ui_toggle_fullscreen()" >
    <h3> FULLSCREEN TOGGLE</h3>
+
+<br>
+<button onclick="htmTxt_ui_scale_change(-2);"> TXT-SMALLER(-) </button>
+<button onclick="htmTxt_ui_scale_change(2);"> TXT-BIGGER(+) </button>
+<br> 
 </button>
+<!-- addding new news to allow space for mobile-fullscreen to go down -->
 <br><br> <br><br><br><br><br><br><br><br><br><br><br><br><br>
 
 
 <script id="script_copy_paste_tool">
+
+function htmTxt__reset_to_default(){
+	   if("yes"!=prompt("confirm reset (type'yes')").trim()){
+		 return;}
+	   //gemini cleaned this...
+	   // 1. Clear physical persistence
+	    localStorage.removeItem(_htmTxt_open_files__local_storage_var_name);
+	    
+	    // 2. Clear volatile memory maps entirely so the auto-save loop has nothing to pack
+	    _htmTxt_open_files = {}; 
+	    htmTxt__copy_paste_tool_data = [];
+	    htmTxt_CURRENT_FILENAME = "Default.txt";
+	    
+	    // 3. Force the layout back to core state
+	    htmTxt_open_files__add_default_if_no_files();
+	    
+	    // 4. Force an immediate, clean baseline save to seal the vault
+	    htmTxt_open_files_autosave__update(true);
+	    
+	    // 5. Force text area presentation components to sync up
+	    var t = htmTxt_cmd_LAST_TEXTAREA_SELECTED;
+	    if (t) {
+        	t.value = "";
+       		 htmTxt_cmd_last_txtArea_value = "";
+        	t.focus();
+    	}
+}
+
+
+// Again, gemini:
+// Sizing Configuration
+var htmTxt_cfg_FONT_SIZE = 14; 
+var htmTxt_cfg_BUTTON_SIZE = 17;
+var htmTxt_cfg_AUTO_SCROLL_BOTTOM = true; // For Feature 3 Toggle
+function htmTxt_ui_apply_scales() {
+    var t = htmTxt_cmd_LAST_TEXTAREA_SELECTED;
+    if (t) {
+        t.style.fontSize = htmTxt_cfg_FONT_SIZE + "px";
+    }
+    
+    // Scale all buttons inside the on-screen mode bar
+    var modeButtons = document.querySelectorAll("#htmTxt_ModeBar button");
+    modeButtons.forEach(function(btn) {
+        btn.style.fontSize = htmTxt_cfg_BUTTON_SIZE + "px";
+    });
+    
+    // Lazy update line numbers to avoid layout thrashing
+    if (t) htmTxt_txtArea_update_line_numb(t);
+}
+// and gemini:
+function htmTxt_ui_scale_change(amt) {
+    htmTxt_cfg_FONT_SIZE = Math.max(10, htmTxt_cfg_FONT_SIZE + amt);
+    htmTxt_cfg_BUTTON_SIZE = Math.max(12, htmTxt_cfg_BUTTON_SIZE + amt);
+    htmTxt_ui_apply_scales();
+    htmTxt_open_files_autosave__update(true); // Persist configuration instantly
+}
+
+
 // Gemini made this
 function htmTxt_ui_toggle_fullscreen() {
     var doc = window.document;
@@ -903,7 +977,12 @@ function htmTxt_open_files_autosave__update( //lazy fuction
 				open_filename:tmpFileName_open_or_null,
 				open_files:tmpOpenFiles,
 				clipboard_data: 
-				    htmTxt__copy_paste_tool_data }) );  
+				    htmTxt__copy_paste_tool_data ,
+				// INJECT USER CONFIGURATION STATE HERE:
+       			 cfg_font_size: htmTxt_cfg_FONT_SIZE,
+        		cfg_button_size: htmTxt_cfg_BUTTON_SIZE,
+        		cfg_auto_scroll: htmTxt_cfg_AUTO_SCROLL_BOTTOM
+			}) );  
 		}
 	if(getDO_NOT_UPDATE_FILE_MENU__OPTIONAL){ return;}
 	/////////////
@@ -950,6 +1029,14 @@ function htmTxt_open_files__load_on_startup(){
 	if(tmpData == null || tmpData == ""){ return; }
 	tmpData = JSON.parse( tmpData);
 	
+
+	// Inside htmTxt_open_files__load_on_startup (gemini):
+	if (tmpData.cfg_font_size) htmTxt_cfg_FONT_SIZE = tmpData.cfg_font_size;
+	if (tmpData.cfg_button_size) htmTxt_cfg_BUTTON_SIZE = tmpData.cfg_button_size;
+	if (tmpData.cfg_auto_scroll !== undefined) htmTxt_cfg_AUTO_SCROLL_BOTTOM = tmpData.cfg_auto_scroll;
+
+	// Apply sizes immediately on startup initialization
+	htmTxt_ui_apply_scales();
 
 	htmTxt__copy_paste_tool_data = tmpData.clipboard_data;
 	_htmTxt_open_files = tmpData.open_files;
@@ -1177,13 +1264,7 @@ async function htmTxt_cmd_NON_EDIT_MENU(e){
 			false, "---------");
 		htmTxt_txtArea_jump_to_nextLine(t); };
 	tmpOptions[("Reset_page_to_default")] = 
-	function(){
-	   if("yes"!=prompt("confirm reset (type'yes')").trim()){
-		 return;}
-	   localStorage.removeItem(
-			_htmTxt_open_files__local_storage_var_name );
-	   window.location.reload();
-	}; 
+		htmTxt__reset_to_default;
 
 	var tmpMenu_out = await 
 		htmTxt_Prompt_Menu( Object.keys(tmpOptions) );
