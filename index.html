@@ -135,7 +135,7 @@ COPY_PASTE BUFFER:<br>
 --- MAIN TEXT BOX:  <br>
 <button onclick="htmTxt_cmd_GO_TO_URL__ON_LINE_N_GOTO_NXT_LINE()"> GOTO_URL_ON_LINE_&_GOTO_NXT_LINE</button>
 <BR>
-<b id="htmTxt_last_line_break_disp2_div">L:1 </b>
+<b id="htmTxt_last_line_break_disp3_div">L:1 </b>
 <select id="htmTxt_FileQuickSwitch_div" style="font-family:monospace; ">
     </select>
 
@@ -145,6 +145,7 @@ COPY_PASTE BUFFER:<br>
 </select>
 
 
+<b id="htmTxt_last_line_break_disp2_div">L:1 </b>
 <br>
 <textarea id="htmTxt_Main_textarea_div" placeholder="Paste here also adds to list..." style="font-family:monospace; width:100%; height:200px;"></textarea>
 
@@ -154,28 +155,28 @@ COPY_PASTE BUFFER:<br>
     <!-- Row 1: Movement -->
     
     <div style="display:flex; justify-content:center; gap:0px; flex-wrap:wrap;">
-    <button onclick="htmTxt_simulateKey(73)">-i</button>
-    <button onclick="htmTxt_simulateKey(89)">-y</button>
-    <button onclick="htmTxt_simulateKey(80)">-p</button>
-    <button onclick="htmTxt_simulateKey(59)">-:</button>
+    <button onpointerdown="htmTxt_simulateKey(73)">-i</button>
+    <button onpointerdown="htmTxt_simulateKey(89)">-y</button>
+    <button onpointerdown="htmTxt_simulateKey(80)">-p</button>
+    <button onpointerdown="htmTxt_simulateKey(59)">-:</button>
 	
-    <button onclick="htmTxt_simulateKey(72)">-h</button>
-    <button onclick="htmTxt_simulateKey(74)">-j</button>
-    <button onclick="htmTxt_simulateKey(75)">-k</button>
-    <button onclick="htmTxt_simulateKey(76)">-l</button>
+    <button onpointerdown="htmTxt_simulateKey(72)">-h</button>
+    <button onpointerdown="htmTxt_simulateKey(74)">-j</button>
+    <button onpointerdown="htmTxt_simulateKey(75)">-k</button>
+    <button onpointerdown="htmTxt_simulateKey(76)">-l</button>
     </div>
 
  <br>
     <!-- Row 2: Actions -->
      <div style="display:flex; justify-content:center; gap:0px; flex-wrap:wrap;">
-    <button onclick="htmTxt_simulateKey(68)">-d</button>
-    <button onclick="htmTxt_simulateKey(70)">-f</button>
-    <button onclick="htmTxt_simulateKey(51)">-#</button>
-    <button onclick="htmTxt_simulateKey(53)">-%</button>
-    <button onclick="htmTxt_simulateKey(52)">-$</button>
-    <button onclick="htmTxt_simulateKey(71)">-g</button>
-    <button onclick="htmTxt_simulateKey(78)">-n</button>
-    <button onclick="htmTxt_simulateKey(191)">-/</button>
+    <button onpointerdown="htmTxt_simulateKey(68)">-d</button>
+    <button onpointerdown="htmTxt_simulateKey(70)">-f</button>
+    <button onpointerdown="htmTxt_simulateKey(51)">-#</button>
+    <button onpointerdown="htmTxt_simulateKey(53)">-%</button>
+    <button onpointerdown="htmTxt_simulateKey(52)">-$</button>
+    <button onpointerdown="htmTxt_simulateKey(71)">-g</button>
+    <button onpointerdown="htmTxt_simulateKey(78)">-n</button>
+    <button onpointerdown="htmTxt_simulateKey(191)">-/</button>
 	</div>
 </div>
 
@@ -185,7 +186,7 @@ COPY_PASTE BUFFER:<br>
 
 
 <div style="display:flex; align-items:center; gap:2px; flex-wrap:wrap; margin-bottom:6px;" id="htmTxt_AUTOCOMP_Carousel_HOLDER">
-    <button onclick="htmTxt_simulateKey(27)" style="font-size:16px; padding:0px 0px;">ESC</button>
+    <button onclick="htmTxt_simulateKey(27)"   style="font-size:16px; padding:0px 0px;">ESC</button>
     
     <div id="htmTxt_AUTOCOMP_Carousel" style="display:flex; overflow-x:auto; background:#eee; border:1px solid #000; height:30px; align-items:center; flex:1;">
         <span style="font-size:10px; color:#666; padding:0 8px;">...type...</span> 
@@ -1397,6 +1398,8 @@ var htmTxt_last_line_break_disp_div =
 	document.getElementById("htmTxt_last_line_break_disp_div");
 var htmTxt_last_line_break_disp2_div = 
 	document.getElementById("htmTxt_last_line_break_disp2_div");
+var htmTxt_last_line_break_disp3_div = 
+	document.getElementById("htmTxt_last_line_break_disp3_div");
 
 //Gemini edited
 function htmTxt_txtArea_update_line_numb(t) {
@@ -1411,7 +1414,8 @@ function htmTxt_txtArea_update_line_numb(t) {
         button_line_numb_div.innerHTML = "L:" + tmpLineCount + "-PASTE";
 	htmTxt_last_line_break_disp_div.innerHTML = "L:" + tmpLineCount;
 	htmTxt_last_line_break_disp2_div.innerHTML = "L:" + tmpLineCount;
-        htmTxt_last_line_break_index = tmpLastLineBreak_i;
+        htmTxt_last_line_break_disp3_div.innerHTML = "L:" + tmpLineCount;
+	htmTxt_last_line_break_index = tmpLastLineBreak_i;
     }
 }
 htmTxt_settup_main_textareas_cmdKey_valueFunct['onkeyup'] = async function(e){
@@ -1700,29 +1704,86 @@ function htmTxt_update_mode_bar() {
     if (carousel) carousel.style.display = htmTxt_cmd_IN_NON_EDIT_MODE ? "none" : "flex";
 }
 
-// Grok made this: 
+// Grok made this, then gemini rewrote it with hold-multi-press
 // Simulate keypress - feeds your existing keydown logic
+// Global trackers for the active rapid-fire intervals
+let htmTxt_repeat_timer = null;
+let htmTxt_repeat_interval = null;
+
 function htmTxt_simulateKey(keyCode, shiftKey = false) {
     const t = htmTxt_cmd_LAST_TEXTAREA_SELECTED;
     if (!t) return;
-    t.focus();
+    
+    // 1. Core Execution Block
+    const fireEngine = () => {
+        t.focus();
+        const fakeEvent = {
+            target: t,
+            keyCode: keyCode,
+            key: String.fromCharCode(keyCode).toLowerCase(),
+            shiftKey: shiftKey,
+            preventDefault: function(){},
+            stopImmediatePropagation: function(){}
+        };
 
-    const fakeEvent = {
-        target: t,
-        keyCode: keyCode,
-        key: String.fromCharCode(keyCode).toLowerCase(), // Helps with modern e.key checks
-        shiftKey: shiftKey,
-        preventDefault: function(){},
-        stopImmediatePropagation: function(){}
+        if (typeof htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'] === 'function') {
+            htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'](fakeEvent);
+        } else if (t.onkeydown) {
+            t.onkeydown(fakeEvent);
+        }
     };
 
-    // Fire through your existing handler
-    if (typeof htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'] === 'function') {
-        htmTxt_settup_main_textareas_cmdKey_valueFunct['keydown'](fakeEvent);
-    } else if (t.onkeydown) {
-        t.onkeydown(fakeEvent);
+    // 2. Capture the element that triggered the function call
+    const btn = window.event ? window.event.currentTarget || window.event.target : null;
+
+    // Fallback if no DOM button element was associated
+    if (!btn || typeof btn.addEventListener !== 'function') {
+        fireEngine();
+        return;
+    }
+
+    // 3. Lazy Upgrade Block
+    if (!btn.htmTxt_hasRepeatAttached) {
+        btn.htmTxt_hasRepeatAttached = true;
+
+        const clearTimers = () => {
+            if (htmTxt_repeat_timer) clearTimeout(htmTxt_repeat_timer);
+            if (htmTxt_repeat_interval) clearInterval(htmTxt_repeat_interval);
+            htmTxt_repeat_timer = null;
+            htmTxt_repeat_interval = null;
+        };
+
+        // Bind lifecycle handlers to catch releases
+        btn.addEventListener('pointerup', clearTimers);
+        btn.addEventListener('pointerleave', clearTimers);
+        btn.addEventListener('pointercancel', clearTimers);
+
+        // Strip out the inline attribute entirely so it never fires again
+        btn.removeAttribute('onpointerdown');
+
+        // Bind the permanent pointerdown handler for this and ALL future presses
+        btn.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            fireEngine(); 
+            clearTimers();
+
+            htmTxt_repeat_timer = setTimeout(() => {
+                htmTxt_repeat_interval = setInterval(fireEngine, 50); 
+            }, 400); 
+        });
+
+        // --- FIRST TIME EXECUTION RUN ---
+        // Because we caught it exactly on real pointerdown, we safely trigger the chain:
+        fireEngine();
+        clearTimers();
+        htmTxt_repeat_timer = setTimeout(() => {
+            htmTxt_repeat_interval = setInterval(fireEngine, 50);
+        }, 400);
+
+        if (window.event) window.event.preventDefault();
     }
 }
+
 
 ////////////////////////////////////
 // :b: setting up main text area:b:
