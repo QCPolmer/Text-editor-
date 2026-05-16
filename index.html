@@ -218,8 +218,41 @@ COPY_PASTE BUFFER:<br>
        </button>
 	-->
 
+<br><br>
+<button onclick="htmTxt_ui_toggle_fullscreen()" >
+   <h3> FULLSCREEN TOGGLE</h3>
+</button>
 
 <script id="script_copy_paste_tool">
+// Gemini made this
+function htmTxt_ui_toggle_fullscreen() {
+    var doc = window.document;
+    var docEl = doc.documentElement;
+
+    // Standard API methods with legacy vendor prefixes for maximum durability
+    var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+    var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+    // Check if the browser is currently in fullscreen mode
+    var isFullScreen = doc.fullscreenElement || doc.mozFullScreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement;
+
+    if (!isFullScreen) {
+        // Go Fullscreen!
+        if (requestFullScreen) {
+            requestFullScreen.call(docEl).catch(function(err) {
+                console.warn("Fullscreen blocked or failed: " + err.message);
+            });
+        }
+    } else {
+        // Exit Fullscreen
+        if (cancelFullScreen) {
+            cancelFullScreen.call(doc);
+        }
+    }
+}
+
+
+
 // :b: copy paste tool :b:
 
 var htmTxt_settup_main_textareas_cmdKey_valueFunct = {};
