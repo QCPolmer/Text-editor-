@@ -81,6 +81,12 @@ if (window.location.protocol === 'http:' ) {
 <br>
 <button onclick="htmTxt__reset_to_default()">Reset to default (clears localstorage)</button><br>
 <br>
+
+<div id="VFS_INTEGRATION_DISP_DIV" style="margin: 6px 0; padding: 6px; background: #1e1e24; border: 1px solid #2a2a35;">
+    <button onclick="htmTxt_load_from_laby_vfs()" style="background:#4f46e5; color:#fff; font-weight:bold; padding: 4px 8px;">[Pull VFS File]</button>
+    <button onclick="htmTxt_save_to_laby_vfs()" style="background:#10b981; color:#fff; font-weight:bold; padding: 4px 8px;">[Commit VFS Changes]</button>
+</div>
+
 <br>
 JK/ DF(for menu) works! ('cntrl + SHIFT+ n' for autocomp, NEEDS SHIFT)
 <br>
@@ -1216,6 +1222,7 @@ async function htmTxt_cmd_NON_EDIT_MENU(e){
 		htmTxt_open_files_open_files__menu(true); };
 	tmpOptions[("Files_Menu")] = 
 		htmTxt_open_files_open_files__menu;
+	tmpOptions[("htmTxt_cal_calender_menu")] = htmTxt_cal_calender_menu;
 	tmpOptions[("CopyPaste_select")] = async function(){
 		prompt("WARNING: the dropdown menu on page for clipboard"
 			+"\n works better(clipboard needs click detection)"
@@ -1902,6 +1909,275 @@ function htmTxt_simulateKey(keyCode, shiftKey = false) {
 
 
 ////////////////////////////////////
+// :b:testing__calendar__system_FUNCTS:b:
+////////////////////////////////
+
+var HTMTXT_CAL_CALENDER_DELINEATOR = 
+    "<CALENDER__ADD_ENTRIES_FROM_MENU_WHEN_CURSOR_BETWEEN_THESE_TAGS>\n";
+var HTMTXT_CAL_ENTRY_DELINEATOR = "___________";
+
+function htmTxt_cal_calender_menu(){
+	var t = htmTxt_cmd_LAST_TEXTAREA_SELECTED;	
+	
+	var tmpSrcTxt = t.value;
+	
+	// adding calendar block IF NEEDED
+	if( tmpSrcTxt.split( HTMTXT_CAL_CALENDER_DELINEATOR ).length!= 3){
+		htmTxt_txtArea_add_lines_below(t, false, //t=textarea elm
+		    	" :b: Calendar_1_per_file :b: \n"
+			+HTMTXT_CAL_CALENDER_DELINEATOR + "\n\n" 
+			+ HTMTXT_CAL_CALENDER_DELINEATOR); 
+		tmpSrcTxt = t.value;
+		var tmpEntries = [];
+	}else{
+		var tmpCalenderTxt = tmpSrcTxt.split( 
+			HTMTXT_CAL_CALENDER_DELINEATOR )[1];
+		var tmpEntries = tmpCalenderTxt.split( 
+			HTMTXT_CAL_ENTRY_DELINEATOR);
+	}
+	
+	var tmpPrevDate = htmTxt_cal_getPrevDate();
+	
+	// not date, use current date...
+	if(tmpPrevDate == null){ tmpPrevDate = 
+		htmTxt_cal_getItem_n_date( htmTxt_cal_genTxt_date( ) ); }
+
+	var getPrompt = prompt( 
+		"ENTER CALENDER ENTRY FORMAT (blank to cancel):"
+		+"\n (days/month::1:Jan31 2:Feb28(29 leap years) "
+		+ "\n 3:Mar31 4:Apr30 5:May31 6:Jun30 7:July31 " 
+		+ "\n 8:Aug31 9:Sept30 10:Oct31 11:Nov30 12:Dec31 "
+		+ "\n first 'n' is for NOW, else previous entry by cursor"
+		+ "\n AUTO-FILLS MISSING ELEMENTS!!!"
+		+"\n EG: n 12:30 am jan 23 2026 -OR- 12 30 am 1 23 2026");
+
+	if(getPrompt == null || getPrompt.trim() == "" ){ return;}
+	getPrompt = getPrompt.match(/[a-zA-Z0-9]+/g);
+	if( getPrompt[0]=="n"){	getPrompt.shift(); 
+		tmpPrevDate = htmTxt_cal_getItem_n_date( htmTxt_cal_genTxt_date( ) ); }
+	
+	 var tmpGenDate = htmTxt_cal_genTxt_date( tmpPrevDate, 
+		getPrompt[1], getPrompt[0], getPrompt[2],
+		getPrompt[4], getPrompt[3], getPrompt[5] )
+	
+	if(tmpGenDate == null){ prompt( "failed to create date!");
+		return null;}
+	var tmp_gen_entry =tmpGenDate; 
+
+	//added partially formatted entry
+	tmpEntries.push( tmp_gen_entry.split(
+			HTMTXT_CAL_ENTRY_DELINEATOR)[1]
+				+ "\n \n" );
+	tmpEntries= 
+	  tmpEntries.filter(function(a){ if(a.trim()!=""){return 1;}});
+	if(tmpEntries.length >1){
+	  // filtering it out! :
+	  tmpEntries = tmpEntries.sort( function(a,b){
+		//uses catch, should be fast...
+		a = htmTxt_cal_getItem_n_date(a);
+		b = htmTxt_cal_getItem_n_date(b);
+		var a_is_bigger = 1; 
+		var B_is_bigger = -1;
+		if( a.year > b.year){ return a_is_bigger;}
+		if( a.year < b.year){ return B_is_bigger;}
+		if( a.month_number > b.month_number){ return a_is_bigger;}
+		if( a.month_number < b.month_number){ return B_is_bigger;}
+		if( a.day > b.day){ return a_is_bigger;}
+		if( a.day < b.day){ return B_is_bigger;}
+		if( a.AM_PM.toUpperCase() == "pm".toUpperCase()
+		   && b.AM_PM.toUpperCase() != "pm".toUpperCase()){ 
+			return a_is_bigger;}
+		if( a.AM_PM.toUpperCase() != "pm".toUpperCase()
+		   && b.AM_PM.toUpperCase() == "pm".toUpperCase()){ 
+			return B_is_bigger;}
+		if( a.hour > b.hour){ return a_is_bigger;}
+		if( a.hour < b.hour){ return B_is_bigger;}
+		if( a.minute > b.minute){ return a_is_bigger;}
+		if( a.minute < b.minute){ return B_is_bigger;}
+		return 0;
+	  });
+	}
+	//tmpEntries = tmpEntries.reverse();
+
+	//joining and re-injecting 
+	tmpEntries = HTMTXT_CAL_ENTRY_DELINEATOR + tmpEntries.join(HTMTXT_CAL_ENTRY_DELINEATOR);
+	
+	tmpSrcTxt = tmpSrcTxt.split(HTMTXT_CAL_CALENDER_DELINEATOR);
+	tmpSrcTxt[1] = tmpEntries;
+	tmpSrcTxt = tmpSrcTxt.join( HTMTXT_CAL_CALENDER_DELINEATOR );
+	
+	t.value = tmpSrcTxt;
+
+	//jumping to entry... 
+	htmTxt_txtArea_jump_to_index( t, 
+		t.value.indexOf( tmp_gen_entry ) );
+	htmTxt_txtArea_jump_to_nextLine(t); 
+}
+
+function htmTxt_cal_getPrevDate(){
+	var t = htmTxt_cmd_LAST_TEXTAREA_SELECTED;	
+	var tmpLastEntryStart =  t.value.lastIndexOf(
+		HTMTXT_CAL_ENTRY_DELINEATOR, t.selectionStart);
+	if(tmpLastEntryStart == -1){ return null;}
+	
+	return htmTxt_cal_getItem_n_date(
+	   t.value.slice( tmpLastEntryStart, tmpLastEntryStart+100 ) );
+}
+
+function htmTxt_cal__htmTxt_cal_genTxt_date__helper__date_curr_time_txt_block( ){
+	var tmpNow = new Date();
+	var tmpMinute = tmpNow.getMinutes();
+	var tmpMonth  = htmTxt_cal__month_numbers[ tmpNow.getMonth() ];
+	var tmpWeekDay = ["Sunday", "Monday", "Tuesday", "Wednesday", 
+		"Thursday", "Friday", "Saturday"][tmpNow.getDay()];
+	var tmpDay = tmpNow.getDate();
+	var tmpHour =  tmpNow.getHours(); 
+	var tmpAm_Pm = "AM";
+	if(tmpHour >=12 && tmpHour<24) { tmpAm_Pm = "PM";}
+	if( tmpHour > 12 ){ tmpHour = tmpHour -12;}
+
+	var tmpYear =tmpNow.getUTCFullYear();;	
+
+	return { minute:tmpMinute, hour:tmpHour, AM_PM:tmpAm_Pm,
+		weekday:tmpWeekDay, day:tmpDay, month:tmpMonth, 
+		year:tmpYear};
+}
+
+function htmTxt_cal_month_from_txt_or_number(getMonth_OPTIONAL){
+	if(getMonth_OPTIONAL == null){ return null;}
+	if(!isNaN(getMonth_OPTIONAL)){
+	  getMonth_OPTIONAL = -1 + parseInt( getMonth_OPTIONAL );
+	  if(undefined == htmTxt_cal__month_numbers[ getMonth_OPTIONAL]){
+		return null;}
+	  return htmTxt_cal__month_numbers[ getMonth_OPTIONAL];
+	}
+	for( var i=0; i<htmTxt_cal__month_numbers.length; i+=1){
+		if(0 == htmTxt_cal__month_numbers[i].toUpperCase().indexOf(
+			getMonth_OPTIONAL.toUpperCase() )){
+				return htmTxt_cal__month_numbers[i]; } }
+	return null;
+}
+
+//___________ Monday 12:30 AM ----------- February 23 ------- 2003 --
+function htmTxt_cal_genTxt_date( getCurTextBlockOn_OR_NULL_for_current_date, 
+		getMinute_OPTIONAL, getHour_OPTIONAL, getAM_PM,
+		getDay_OPTIONAL, getMonth_OPTIONAL, getYear_OPTIONAL ){
+
+	var tmpWorkingDate = getCurTextBlockOn_OR_NULL_for_current_date;
+	if(tmpWorkingDate == null){
+		var tmpWorkingDate = 
+		   htmTxt_cal__htmTxt_cal_genTxt_date__helper__date_curr_time_txt_block( );}
+	
+	// copy as to not change caught data...
+	var tmpWorkingDate = JSON.parse( JSON.stringify( tmpWorkingDate));
+	////////////////////////
+	// tmpWorkingData = 
+	// { 'minute':.., 'hour':.., 'AM_PM':.., 'day':.., 'weekday':..,
+	//	'month':.., 'year':.. }
+	
+	if(getMinute_OPTIONAL ==null){
+		getMinute_OPTIONAL = tmpWorkingDate.minute; 
+	}else{  getMinute_OPTIONAL = parseInt(getMinute_OPTIONAL);
+		if(isNaN( getMinute_OPTIONAL)){ return null;}}
+
+	if(getHour_OPTIONAL ==null){
+		getHour_OPTIONAL = tmpWorkingDate.hour; 
+	}else{  getHour_OPTIONAL = parseInt(getHour_OPTIONAL);
+		if(isNaN( getHour_OPTIONAL)){ return null;}}
+
+	if(getHour_OPTIONAL > 12){ getHour_OPTIONAL-=12;
+		getAM_PM = "PM"; } 
+
+	if(getAM_PM ==null){
+		getAM_PM = tmpWorkingDate.AM_PM; 
+	}else{ if(typeof getAM_PM != "string"){ return null;}
+		getAM_PM = getAM_PM.toUpperCase();
+		if(["AM","PM"].indexOf( getAM_PM) ==-1){ return null;} }
+
+	if(getDay_OPTIONAL ==null){
+		getDay_OPTIONAL = tmpWorkingDate.day; 
+	}else{  getDay_OPTIONAL = parseInt(getDay_OPTIONAL);
+		if(isNaN( getDay_OPTIONAL)){ return null;}}
+
+	if(getMonth_OPTIONAL ==null){
+		getMonth_OPTIONAL = tmpWorkingDate.month; 
+	}else{  
+		getMonth_OPTIONAL= 
+			htmTxt_cal_month_from_txt_or_number(getMonth_OPTIONAL);
+		if(getMonth_OPTIONAL == null){ return null;}	}
+
+	if(getYear_OPTIONAL ==null){
+		getYear_OPTIONAL = tmpWorkingDate.year;
+	}else{  getYear_OPTIONAL = parseInt(getYear_OPTIONAL);
+		if(isNaN( getYear_OPTIONAL)){ return null;}}
+
+	var tmpDay_name =  new Date(getYear_OPTIONAL,
+		htmTxt_cal__month_numbers.indexOf(getMonth_OPTIONAL),
+		getDay_OPTIONAL);
+	tmpDay_name = ["Sunday", "Monday", "Tuesday", "Wednesday", 
+		"Thursday", "Friday", "Saturday"][ tmpDay_name.getDay() ];
+
+	var tmpOut = HTMTXT_CAL_ENTRY_DELINEATOR +" "
+		+ tmpDay_name + " " 
+		+ getHour_OPTIONAL + ":" + getMinute_OPTIONAL + " " 
+		+ getAM_PM + " " 
+		+ "----------"
+		+ getMonth_OPTIONAL + " "  + getDay_OPTIONAL + " " 
+		+ "----------"
+		+ getYear_OPTIONAL + " \n"; 
+	return tmpOut;
+}
+
+//___________ Monday 12:30 AM ---------- February 23 ------- 2003
+   
+var htmTxt_cal__month_numbers = ["January","February","March","April","May",
+  "June","July","August","September","October", "November", "December"];
+var htmTxt_cal_getItem_n_Date__text_box_catch={};
+function htmTxt_cal_getItem_n_date(getTextBlock){ 
+	// returns: 
+	// { 'minute':.., 'hour':.., 'AM_PM':.., 'day':.., 'weekday':..,
+	//	'month':.., 'year':..,  'month_number':... }
+	if(htmTxt_cal_getItem_n_Date__text_box_catch[getTextBlock] != undefined){
+	  return htmTxt_cal_getItem_n_Date__text_box_catch[ getTextBlock ]; }
+	
+	var tmp_raw_list = getTextBlock.match(/[a-zA-Z0-9]+/g);
+	var tmpCatch_item = {};
+	tmpCatch_item.year = parseInt( tmp_raw_list[6]);
+	tmpCatch_item.day = parseInt( tmp_raw_list[5]);
+	tmpCatch_item.weekday = tmp_raw_list[1];
+	tmpCatch_item.month = tmp_raw_list[4];
+	tmpCatch_item.month_number = 
+		htmTxt_cal__month_numbers.indexOf( tmp_raw_list[4]);
+	tmpCatch_item.AM_PM = tmp_raw_list[3];
+
+	tmpCatch_item.minute = parseInt( tmp_raw_list[2]);
+	tmpCatch_item.hour = parseInt( tmp_raw_list[1]);
+	if( tmpCatch_item.hour == 12){
+		if(tmp_raw_list[3][0].toUpperCase() == 'A'.toUpperCase()){
+			tmpCatch_item.AM_PM = "AM";
+			tmpCatch_item.hour = tmpCatch_item.hour -12;}
+	}else if(tmp_raw_list[3][0].toUpperCase() == 'P'.toUpperCase()){
+		tmpCatch_item.AM_PM = "PM";
+		tmpCatch_item.hour = tmpCatch_item.hour + 12;}
+
+	tmpCatch_item.full_time_number = ""+tmpCatch_item.year;
+	var tmpL = ["month_number", "day","hour", "minute"];
+	for(var i=0; i< tmpL; i+=1){
+	   if(tmpCatch_item[tmpL[i]] <10){
+		tmpCatch_item.full_time_number = 
+		   tmpCatch_item.full_time_number+"0"+
+			tmpCatch_item[tmpL[i]];
+	   }else{tmpCatch_item.full_time_number = 
+		  tmpCatch_item.full_time_number+tmpCatch_item[tmpL[i]];}}
+	tmpCatch_item.full_time_number = 
+		parseInt( tmpCatch_item.full_time_number);
+	
+	htmTxt_cal_getItem_n_Date__text_box_catch[getTextBlock]=
+		tmpCatch_item;
+	return tmpCatch_item; 
+}
+
+////////////////////////////////////
 // :b: setting up main text area:b:
 ////////////////////////////////
 var htmTxt_Main_textarea_div = 
@@ -1919,6 +2195,87 @@ htmTxt_txtArea_undo_redo__ADD(
 //htmTxt_init_mode_bar();
 //htmTxt_update_mode_bar();   // initial state
 
+</script>
+
+
+<script id="labyos_integration_pipeline">
+// =====================================================================
+// LABYOS KERNEL LINK DESIGN LAYER (FAILS GRACEFULLY)
+// =====================================================================
+(function() {
+    // 1. Safe Environment Check
+    const isSandboxedInLabyOS = (typeof window.file_load === "function" && typeof window.file_save === "function");
+
+    if (!isSandboxedInLabyOS) {
+        document.getElementById("VFS_INTEGRATION_DISP_DIV").style.display="none";
+        console.log("[LabyOS Bridge] Running standalone. VFS pipeline vectors offline.");
+        return; // Exits loop cleanly without defining breaking variables
+    }
+
+    console.log("[LabyOS Bridge] Host kernel detected. Hooking up memory maps.");
+
+    // 2. Automated File Pointer Hook for Focus Triggers on Launch
+    setTimeout(function() {
+        if (window.__VFS_TARGET_FILE__) {
+            console.log("[LabyOS Bridge] Catching auto-focus pointer target: " + window.__VFS_TARGET_FILE__);
+            window.htmTxt_load_from_laby_vfs();
+        }
+    }, 150);
+
+    // 3. Define the Global Sync Callbacks Safely
+    window.htmTxt_load_from_laby_vfs = function() {
+        var t = window.htmTxt_cmd_LAST_TEXTAREA_SELECTED;
+        if (!t) return;
+
+        var path = window.__VFS_TARGET_FILE__ || prompt("Enter VFS node path to read text strings from:", window.__VFS_CURRENT_DIR__ || "/");
+        if (!path) return;
+
+        try {
+            var content = window.file_load("/", path);
+            if (content !== null) {
+                if (typeof window.htmTxt_txtArea_undo_redo__ADD === "function") {
+                    window.htmTxt_txtArea_undo_redo__ADD(t);
+                }
+                t.value = content;
+                window.htmTxt_cmd_last_txtArea_value = content;
+                window.htmTxt_CURRENT_FILENAME = path.split('/').pop();
+                
+                var nameDiv = document.getElementById("htmTxt_CURRENT_FILENAME_div");
+                if (nameDiv) nameDiv.innerHTML = window.htmTxt_CURRENT_FILENAME + " [VFS Node]";
+                
+                if (typeof window.htmTxt_txtArea_update_line_numb === "function") {
+                    window.htmTxt_txtArea_update_line_numb(t);
+                }
+                console.log("[LabyOS Bridge] Core IO Read finished: " + path);
+            } else {
+                alert("VFS Read Fault: Target string address empty!");
+            }
+        } catch (err) {
+            console.error("[LabyOS Bridge] Read execution block stalled: " + err.message);
+        }
+    };
+
+    window.htmTxt_save_to_laby_vfs = function() {
+        var t = window.htmTxt_cmd_LAST_TEXTAREA_SELECTED;
+        if (!t) return;
+
+        var path = window.__VFS_TARGET_FILE__ || prompt("Enter VFS node path destination targets:", (window.__VFS_CURRENT_DIR__ || "/") + window.htmTxt_CURRENT_FILENAME);
+        if (!path) return;
+
+        try {
+            window.file_save("/", path, t.value);
+            console.log("[LabyOS Bridge] Core IO Write finished: " + path);
+            
+            if (!window.__VFS_TARGET_FILE__) {
+                window.htmTxt_CURRENT_FILENAME = path.split('/').pop();
+                var nameDiv = document.getElementById("htmTxt_CURRENT_FILENAME_div");
+                if (nameDiv) nameDiv.innerHTML = window.htmTxt_CURRENT_FILENAME + " [VFS Node]";
+            }
+        } catch (err) {
+            console.error("[LabyOS Bridge] Write execution block stalled: " + err.message);
+        }
+    };
+})();
 </script>
 
 </body>
