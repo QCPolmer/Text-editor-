@@ -1222,7 +1222,10 @@ async function htmTxt_cmd_NON_EDIT_MENU(e){
 		htmTxt_open_files_open_files__menu(true); };
 	tmpOptions[("Files_Menu")] = 
 		htmTxt_open_files_open_files__menu;
-	tmpOptions[("htmTxt_cal_calender_menu")] = htmTxt_cal_calender_menu;
+	tmpOptions[("htmTxt_cal_calender_menu")] = 
+	  function(){ htmTxt_txtArea_undo_redo__ADD(
+			htmTxt_cmd_LAST_TEXTAREA_SELECTED );
+		htmTxt_cal_calender_menu(); }
 	tmpOptions[("CopyPaste_select")] = async function(){
 		prompt("WARNING: the dropdown menu on page for clipboard"
 			+"\n works better(clipboard needs click detection)"
